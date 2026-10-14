@@ -1,0 +1,8 @@
+{
+  "announce": "",
+  "maintenance": false,
+  "maintMsg": "",
+  "signup": true,
+  "tabs": { "leagues": true, "analyze": true },
+  "blocked": []
+}
