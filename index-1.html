@@ -1,0 +1,2289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c2185b" id="metaTheme">
+<script>
+(function () {
+  var M = { black: "#000000", pink: "#c2185b", peach: "#b4aec6", night: "#0d0f14", green: "#0e1511" }, t = "black";
+  try { if (localStorage.getItem("bb-theme-mig") !== "2") { localStorage.setItem("bb-theme", "black"); localStorage.setItem("bb-theme-mig", "2"); } t = localStorage.getItem("bb-theme") || "black"; } catch (e) {}
+  if (!M[t]) t = "black";
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("metaTheme").setAttribute("content", M[t]);
+})();
+</script>
+<title>Betting Brain</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one column. Top switch between the live match list and the analysis form. */
+:root {
+  --bg: #c2185b;
+  --surface: rgba(60, 0, 30, 0.32);
+  --fg: #ffffff;
+  --muted: rgba(255, 255, 255, 0.86);
+  --line: rgba(255, 255, 255, 0.24);
+  --accent: #ffffff;
+  --on-accent: #a50f50;
+  --home: #ffffff;
+  --draw: rgba(40, 0, 20, 0.5);
+  --away: #ffe14d;
+  --live: #ffe14d;
+  --field: rgba(0, 0, 0, 0.24);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bg-grad: linear-gradient(165deg, #ec1c7c 0%, #c2185b 48%, #8f0f4b 100%);
+  --btn-bg: rgba(255, 255, 255, 0.14); --btn-line: rgba(255, 255, 255, 0.4);
+  --shadow: none; --shadow-sm: none; --pop: #a50f50; --ph: rgba(255, 255, 255, 0.6);
+  --ph-bg: rgba(255, 255, 255, 0.22); --ph-fg: #ffffff; --lose-bg: #3a0620; --lose-fg: #ffffff; --logo-bg: #ffffff; --logo-fg: #a50f50;
+  color-scheme: dark;
+}
+:root[data-theme="peach"] {
+  --bg: #b4aec6; --bg-grad: linear-gradient(165deg, #d3cde0 0%, #b9b3ca 55%, #a29cb6 100%);
+  --surface: #f7dccb; --fg: #262a44; --muted: #585a77; --line: rgba(38, 42, 68, 0.16);
+  --accent: #262a44; --on-accent: #fbe6d8; --home: #262a44; --draw: rgba(38, 42, 68, 0.22); --away: #c2362b; --live: #d63a2f;
+  --field: rgba(255, 255, 255, 0.55); --btn-bg: #fbe9dd; --btn-line: rgba(38, 42, 68, 0.2);
+  --shadow: 8px 8px 18px rgba(58, 48, 90, 0.28), -5px -5px 12px rgba(255, 255, 255, 0.55); --shadow-sm: 4px 4px 9px rgba(58, 48, 90, 0.25), -3px -3px 7px rgba(255, 255, 255, 0.6);
+  --pop: #262a44; --ph: rgba(38, 42, 68, 0.5); --ph-bg: rgba(38, 42, 68, 0.12); --ph-fg: #262a44; --lose-bg: #c2362b; --lose-fg: #ffffff;
+  --logo-bg: #262a44; --logo-fg: #fbe6d8; color-scheme: light;
+}
+:root[data-theme="night"] {
+  --bg: #0d0f14; --bg-grad: linear-gradient(165deg, #171b26 0%, #0d0f14 100%);
+  --surface: #1c202b; --fg: #f2f3f7; --muted: #aab0c0; --line: rgba(255, 255, 255, 0.13);
+  --accent: #e91e78; --on-accent: #ffffff; --home: #e91e78; --draw: rgba(255, 255, 255, 0.2); --away: #ff8a65; --live: #ffd54a;
+  --field: rgba(255, 255, 255, 0.07); --btn-bg: rgba(255, 255, 255, 0.08); --btn-line: rgba(255, 255, 255, 0.22);
+  --pop: #c2185b; --ph: rgba(255, 255, 255, 0.45); --ph-bg: rgba(255, 255, 255, 0.12); --ph-fg: #ffffff; --lose-bg: #a8321f; --lose-fg: #ffffff;
+  --logo-bg: #e91e78; --logo-fg: #ffffff;
+}
+:root[data-theme="green"] {
+  --bg: #0e1511; --bg-grad: linear-gradient(165deg, #1b3a28 0%, #10241a 55%, #0b1710 100%);
+  --surface: rgba(255, 255, 255, 0.07); --fg: #f1f8f3; --muted: #b3c8ba; --line: rgba(255, 255, 255, 0.16);
+  --accent: #3ddc84; --on-accent: #04210f; --home: #3ddc84; --draw: rgba(255, 255, 255, 0.2); --away: #ff9d5c; --live: #ffd54a;
+  --field: rgba(0, 0, 0, 0.25); --btn-bg: rgba(255, 255, 255, 0.09); --btn-line: rgba(255, 255, 255, 0.25);
+  --pop: #0f6b3f; --ph: rgba(255, 255, 255, 0.5); --ph-bg: rgba(255, 255, 255, 0.16); --ph-fg: #ffffff; --lose-bg: #9a4a14; --lose-fg: #ffffff;
+  --logo-bg: #3ddc84; --logo-fg: #04210f;
+}
+
+:root[data-theme="black"] {
+  --bg: #000000; --bg-grad: linear-gradient(180deg, #000000 0%, #000000 100%);
+  --surface: #111114; --fg: #f4f4f7; --muted: #a3a3ad; --line: rgba(255, 255, 255, 0.14);
+  --accent: #ff2d87; --on-accent: #ffffff; --home: #ff2d87; --draw: rgba(255, 255, 255, 0.22); --away: #ff9a6b; --live: #ffd54a;
+  --field: rgba(255, 255, 255, 0.07); --btn-bg: rgba(255, 255, 255, 0.08); --btn-line: rgba(255, 255, 255, 0.24);
+  --pop: #c2185b; --ph: rgba(255, 255, 255, 0.45); --ph-bg: rgba(255, 255, 255, 0.12); --ph-fg: #ffffff; --lose-bg: #a8321f; --lose-fg: #ffffff;
+  --logo-bg: #ff2d87; --logo-fg: #ffffff; color-scheme: dark;
+}
+html { background: #000; }
+.nav { display: flex !important; }
+.nav .tab { flex: 1 1 0; }
+.announce { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 0.9rem; }
+#splash { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; transition: opacity .55s ease, visibility .55s; }
+#splash.out { opacity: 0; visibility: hidden; }
+.sp-logo { width: 92px; height: 92px; border-radius: 26px; background: #ff2d87; color: #fff; font-weight: 800; font-size: 2.3rem; display: grid; place-items: center; letter-spacing: .02em;
+  animation: spPop .9s cubic-bezier(.2,1.4,.4,1) both, spGlow 1.8s ease-in-out .9s infinite alternate; }
+.sp-name { display: flex; gap: 2px; font-size: 1.9rem; font-weight: 800; color: #fff; letter-spacing: .04em; }
+.sp-name span { display: inline-block; opacity: 0; transform: translateY(18px); animation: spRise .5s ease forwards; }
+.sp-name .sp { width: .45em; }
+.sp-bar { width: 140px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.sp-bar i { display: block; height: 100%; width: 0; background: #ff2d87; animation: spBar 2.1s ease-out forwards; }
+@keyframes spPop { from { transform: scale(.3) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes spGlow { from { box-shadow: 0 0 0 0 rgba(255,45,135,.55); } to { box-shadow: 0 0 38px 8px rgba(255,45,135,.5); } }
+@keyframes spRise { to { opacity: 1; transform: none; } }
+@keyframes spBar { to { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .sp-logo, .sp-name span, .sp-bar i { animation-duration: .01s; animation-delay: 0s !important; } }
+#gate { position: fixed; inset: 0; z-index: 9000; background: #000; overflow-y: auto; display: flex; padding: 24px 16px; }
+#gate[hidden] { display: none !important; }
+.gbox { margin: auto; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; }
+.gbox .glogo { width: 64px; height: 64px; border-radius: 18px; background: #ff2d87; color: #fff; font-weight: 800; font-size: 1.5rem; display: grid; place-items: center; margin-inline: auto; }
+.gbox h2 { margin: 0; text-align: center; font-size: 1.4rem; }
+.gtabs { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.gtabs button { flex: 1; font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: 10px; background: transparent; color: var(--fg); cursor: pointer; }
+.gtabs button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.gbox > .btn { width: 100%; }
+.gbox .btn.main { width: 100%; background: var(--accent); color: var(--on-accent); border-color: var(--accent); padding: 12px 14px; font-size: 1rem; }
+.glink { background: none; border: 0; color: var(--muted); font: inherit; font-size: .8rem; text-decoration: underline; cursor: pointer; align-self: center; }
+.gbox input { font-family: var(--f-body); }
+.adrow { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding-block: 7px; }
+.adrow + .adrow { border-top: 1px solid var(--line); }
+.adrow span { overflow-wrap: anywhere; min-width: 0; }
+.adrow label.ck { flex-direction: row; align-items: center; gap: 10px; color: var(--fg); font-size: .95rem; }
+.adrow input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); }
+textarea { font: inherit; font-family: var(--f-body); font-size: 1rem; color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 10px; width: 100%; min-height: 70px; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; background: var(--bg) var(--bg-grad) fixed; color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-inline: 16px; padding-block: calc(20px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px)); }
+.wrap { width: 100%; min-width: 0; max-width: 640px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+form { display: flex; flex-direction: column; gap: 16px; margin: 0; }
+h1 { font-family: var(--f-display); font-size: 2rem; line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-size: 1.1rem; margin: 0 0 12px; }
+h3 { font-family: var(--f-display); font-size: 0.95rem; margin: 18px 0 8px; }
+h3:first-child { margin-top: 0; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; min-width: 0; box-shadow: var(--shadow); }
+details.card > summary { cursor: pointer; font-family: var(--f-display); font-size: 1.1rem; font-weight: 700;
+  list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::after { content: "+"; font-family: var(--f-mono); color: var(--muted); }
+details.card[open] > summary::after { content: "\2212"; }
+details.card[open] > summary { margin-bottom: 12px; }
+summary:focus-visible, .tab:focus-visible, .btn:focus-visible, .mrow:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.grid2 > *, .card > * { min-width: 0; }
+input, select { max-width: 100%; min-width: 0; }
+.team { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.th { font-family: var(--f-display); font-weight: 700; overflow-wrap: anywhere; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+input, select { font: inherit; font-family: var(--f-mono); font-size: 1rem; color: var(--fg); background: var(--field);
+  border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 100%; min-width: 0; }
+input.name { font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; }
+input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+select option { color: #2a0a1a; background: #fff; }
+input::placeholder { color: var(--ph); }
+summary { color: var(--fg); }
+.tag { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.note { font-size: 0.8rem; color: var(--muted); margin: 10px 0 0; }
+.banner { font-size: 0.85rem; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface);
+  border-radius: 10px; padding: 12px 14px; overflow-wrap: anywhere; }
+.banner.warn { border-left-color: var(--away); }
+.lam { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lam div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lam b { font-family: var(--f-mono); font-size: 1.9rem; font-weight: 600; }
+.lam span { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.bar { display: flex; height: 38px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.bar div { display: flex; align-items: center; justify-content: center; font-family: var(--f-mono); font-weight: 600;
+  font-size: 0.85rem; color: var(--on-accent); min-width: 0; overflow: hidden; }
+.bar .h { background: var(--accent); color: var(--on-accent); } .bar .d { background: var(--draw); color: var(--fg); } .bar .a { background: var(--lose-bg); color: var(--lose-fg); }
+.legend { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 0.8rem; color: var(--muted); }
+.legend span { min-width: 0; overflow-wrap: anywhere; }
+.rows { display: flex; flex-direction: column; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 8px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row span { min-width: 0; overflow-wrap: anywhere; }
+.row b { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; flex-shrink: 0; }
+.rows.stack .row { flex-direction: column; gap: 2px; }
+.rows.stack .row b { white-space: normal; text-align: left; font-family: var(--f-body); font-weight: 500; color: var(--muted); font-size: 0.85rem; }
+.scroll { overflow-x: auto; max-width: 100%; }
+#v-analyze > *, #f { min-width: 0; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-family: var(--f-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+th { color: var(--muted); font-weight: 500; padding: 4px; }
+td { text-align: center; padding: 8px 2px; border: 2px solid var(--surface); }
+.top { display: flex; flex-direction: column; gap: 6px; }
+.top div { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; }
+.tab { font: inherit; font-weight: 600; font-size: 0.85rem; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--field); color: var(--fg); white-space: nowrap; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.nav { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.nav .tab { text-align: center; border: 0; background: transparent; padding: 10px 14px; }
+.nav .tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.btn { font: inherit; font-weight: 600; font-size: 0.85rem; padding: 9px 14px; border-radius: 6px; border: 1px solid var(--btn-line);
+  background: var(--btn-bg); color: var(--fg); cursor: pointer; align-self: flex-start; box-shadow: var(--shadow-sm); }
+.backarrow { position: sticky; top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 30; width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; line-height: 1; align-self: flex-start;
+  background: var(--btn-bg); color: var(--fg); border: 1px solid var(--btn-line); box-shadow: 0 2px 10px rgba(0,0,0,0.35); cursor: pointer; }
+.backarrow:active { transform: scale(0.94); }
+.steps { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 8px; }
+code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.warn { font-size: 0.85rem; color: var(--muted); border-left: 3px solid var(--away); padding-left: 12px; margin: 0; }
+/* live list */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.toolbar { display: flex; flex-direction: column; gap: 10px; }
+.status { font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.scrollx { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+.scrollx .chip { white-space: nowrap; flex-shrink: 0; }
+.dleague { font-size: 0.75rem; color: var(--muted); text-align: center; }
+.dhead { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 10px; align-items: center; margin-top: 8px; text-align: center; }
+.dhead b { font-family: var(--f-display); font-size: 1.05rem; overflow-wrap: anywhere; }
+.dscore { font-family: var(--f-mono); font-size: 1.6rem; font-weight: 600; white-space: nowrap; }
+.dstat { text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+.dstat.live { color: var(--live); font-weight: 600; }
+.srow { display: grid; grid-template-columns: 56px minmax(0,1fr) 56px; gap: 8px; align-items: center; padding-block: 8px; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.srow b { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.srow b:first-child { text-align: left; } .srow b:last-child { text-align: right; }
+.srow span { text-align: center; color: var(--muted); font-size: 0.8rem; }
+.lu h3 { margin: 14px 0 6px; }
+.lu .pl { display: grid; grid-template-columns: 28px 36px minmax(0,1fr); gap: 8px; padding-block: 5px; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.lu .pl i { font-style: normal; font-family: var(--f-mono); color: var(--muted); }
+.lu .pl em { font-style: normal; font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); }
+.appbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand h1 { font-size: 1.2rem; white-space: nowrap; }
+.brand .tag { font-size: 0.6rem; }
+.hbtns { gap: 6px; }
+.brand .tag { margin-top: 2px; }
+.logo { width: 40px; height: 40px; border-radius: 14px; background: var(--logo-bg); color: var(--logo-fg); display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+.hbtns { display: flex; gap: 8px; flex-shrink: 0; }
+.ib { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--btn-line); background: var(--btn-bg); color: var(--fg); font-size: 1.1rem; line-height: 1; cursor: pointer; box-shadow: var(--shadow-sm); padding: 0; }
+.greet { margin: 0; font-weight: 600; }
+.sub { margin: 4px 0 0; font-size: 0.9rem; }
+.dayrow { display: flex; gap: 8px; align-items: stretch; }
+.dayrow .days { flex: 1; min-width: 0; }
+.livebtn { flex: 0 0 auto; font: inherit; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.04em; height: 38px; padding: 0 12px; border-radius: 999px; border: 2px solid #ff6b78;
+  background: #e11d2e; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 10px rgba(225, 29, 46, 0.5); }
+.livebtn .dot { background: #fff; margin: 0; width: 8px; height: 8px; }
+.livebtn b { font-family: var(--f-mono); background: rgba(0, 0, 0, 0.25); border-radius: 999px; padding: 0 6px; font-size: 0.72rem; }
+.livebtn[aria-pressed="true"] { background: #a30f1c; border-color: #fff; box-shadow: 0 0 0 3px rgba(225, 29, 46, 0.45); }
+.burger { display: block; width: 18px; height: 2.5px; border-radius: 2px; background: currentColor; margin: 0 auto; box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor; }
+.sw { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; color: var(--fg); background: var(--btn-bg); border: 2px solid var(--btn-line);
+  border-radius: 14px; padding: 10px 12px; cursor: pointer; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+.sw[aria-pressed="true"] { border-color: var(--accent); }
+.sw i { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); flex-shrink: 0; }
+.sw b { flex: 1; } .sw span { font-size: 0.8rem; color: var(--muted); }
+.srow2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 8px; }
+.srow2 + .srow2 { border-top: 1px solid var(--line); }
+.fld2 { display: flex; flex-direction: column; gap: 10px; }
+.err { color: var(--live); font-weight: 600; font-size: 0.85rem; margin: 0; }
+.days { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.dtab { flex: 0 0 auto; min-width: 64px; font: inherit; text-align: center; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); cursor: pointer; display: flex; flex-direction: column; line-height: 1.25; }
+.dtab b { font-size: 0.8rem; } .dtab small { font-size: 0.7rem; color: var(--muted); }
+.dtab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.dtab[aria-selected="true"] small { color: inherit; opacity: 0.85; }
+.lg { display: flex; align-items: center; gap: 8px; margin: 16px 0 6px; font-weight: 600; font-size: 0.9rem; }
+.lg .lgn { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lg .lgc { font-family: var(--f-mono); font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+.lgi { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+.crest { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+.crest.ph { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--ph-bg); color: var(--ph-fg); font-size: 0.65rem; font-weight: 600; }
+.tl { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tl b { font-weight: 600; overflow-wrap: anywhere; }
+.lcat { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+.lrow { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 12px; align-items: center; width: 100%; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; color: var(--fg); font: inherit; cursor: pointer; }
+.lrow .lgi { width: 28px; height: 28px; }
+.lrow .ln { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+.lrow .ln small { display: block; font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+.lrow .cn { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); }
+.lg.big { margin: 0; font-size: 1.05rem; } .lg.big .lgi { width: 30px; height: 30px; }
+.lgi.ph { font-size: 1.1rem; background: transparent; width: 28px; height: 28px; }
+.cmp { color: var(--muted); font-size: 0.7rem; }
+.okline { margin: 0 0 8px; font-weight: 600; color: var(--live); font-size: 0.85rem; }
+.fm { margin-top: 14px; } .fm h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.frow { display: grid; grid-template-columns: minmax(0,1fr) 64px 64px; gap: 8px; padding-block: 6px; border-top: 1px solid var(--line); font-size: 0.85rem; align-items: baseline; }
+.frow b { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.frow.fh { border-top: 0; color: var(--muted); font-size: 0.75rem; }
+.wdl { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; }
+.wdl.W { background: #16a34a; } .wdl.D { background: #6b7280; } .wdl.L { background: #7f1d1d; }
+.fl summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-top: 8px; }
+.fbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+#toast { position: fixed; left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 50; max-width: 520px; margin-inline: auto;
+  background: #fff; color: var(--pop); font-weight: 600; border-radius: 12px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+.star { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; line-height: 1; color: var(--fg); background: var(--btn-bg); border: 1px solid var(--btn-line); cursor: pointer; box-shadow: var(--shadow-sm); }
+.star.on { background: var(--live); border-color: var(--live); }
+.mrow { grid-template-columns: 56px minmax(0,1fr) auto 30px !important; }
+.pitch { position: relative; width: 100%; max-width: 420px; margin: 8px auto 0; aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden;
+  background: repeating-linear-gradient(180deg, #1e8f4e 0, #1e8f4e 8.33%, #23a05a 8.33%, #23a05a 16.66%); border: 2px solid rgba(255,255,255,0.7); }
+.pitch svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pp { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; width: 64px; pointer-events: none; }
+.pp i { font-style: normal; width: 28px; height: 28px; border-radius: 50%; background: #fff; color: var(--pop); font-family: var(--f-mono); font-weight: 700; font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--pop); position: relative; }
+.pp i u { text-decoration: none; position: absolute; right: -9px; top: -8px; font-size: 0.7rem; color: #fff; background: #7f1d1d; border-radius: 8px; padding: 0 3px; }
+.pp span { margin-top: 2px; font-size: 0.68rem; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lside { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.coach { font-size: 0.85rem; margin: 10px 0 0; }
+.mday { font-family: var(--f-display); font-size: 1rem; margin: 16px 0 8px; }
+.mrow { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  color: var(--fg); font: inherit; cursor: pointer; }
+.mstat { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); text-align: center; }
+.mstat.live { color: var(--live); font-weight: 600; }
+.mstat.fin { font-weight: 600; }
+.mt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mt b { font-weight: 600; overflow-wrap: anywhere; }
+.mt small { color: var(--muted); font-size: 0.72rem; overflow-wrap: anywhere; }
+.msc { display: flex; flex-direction: column; gap: 2px; font-family: var(--f-mono); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--live); margin-right: 4px; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+.pre-tag { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+@media (max-width: 380px) { .grid2, .lam { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true"><div class="sp-logo">BB</div><div class="sp-name"><span style="animation-delay:0.50s">B</span><span style="animation-delay:0.56s">E</span><span style="animation-delay:0.62s">T</span><span style="animation-delay:0.68s">T</span><span style="animation-delay:0.74s">I</span><span style="animation-delay:0.80s">N</span><span style="animation-delay:0.86s">G</span><span class="sp" style="animation-delay:0.92s"></span><span style="animation-delay:0.98s">B</span><span style="animation-delay:1.04s">R</span><span style="animation-delay:1.10s">A</span><span style="animation-delay:1.16s">I</span><span style="animation-delay:1.22s">N</span></div><div class="sp-bar"><i></i></div></div>
+<div id="gate"></div>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand"><span class="logo" aria-hidden="true">BB</span><div><h1>Betting Brain</h1><div class="tag">Uchambuzi wa mechi · Poisson</div></div></div>
+    <div class="hbtns"><button type="button" class="livebtn" id="liveBtn" aria-pressed="false" aria-label="Live matches"><span class="dot"></span>LIVE <b id="liveN">0</b></button><button type="button" class="ib" id="bellBtn" aria-label="Arifa za magoli">🔕</button><button type="button" class="ib" id="setBtn" aria-label="Mipangilio"><span class="burger"></span></button></div>
+  </header>
+  <p class="greet" id="greet" hidden></p>
+  <p class="announce" id="announce" hidden></p>
+
+  <nav class="nav" role="tablist" aria-label="Sehemu">
+    <button type="button" class="tab" role="tab" id="nav-matches" aria-selected="true">Mechi</button>
+    <button type="button" class="tab" role="tab" id="nav-leagues" aria-selected="false">Ligi</button>
+    <button type="button" class="tab" role="tab" id="nav-analyze" aria-selected="false">Changanua</button>
+  </nav>
+
+  <!-- ================= MECHI ================= -->
+  <section id="v-matches" class="wrap" style="gap:12px">
+    <div class="toolbar">
+      <div class="days" id="dayTabs" role="tablist" aria-label="Siku"></div>
+      <div class="status"><span id="listStatus">Napakia mechi...</span><button type="button" class="btn" id="refreshBtn">Onyesha upya</button></div>
+    </div>
+    <div id="list" aria-live="polite"></div>
+  </section>
+
+  <!-- ================= MSIMAMIZI ================= -->
+  <section id="v-admin" class="wrap" hidden>
+    <button type="button" class="backarrow" id="adBack" aria-label="Rudi">&#8592;</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="adOut">Toka kwenye usimamizi</button></div>
+    <div id="adBody" class="wrap"></div>
+  </section>
+
+  <!-- ================= MIPANGILIO ================= -->
+  <section id="v-settings" class="wrap" hidden>
+    <button type="button" class="backarrow" id="sBack" aria-label="Rudi">&#8592;</button>
+    <section class="card">
+      <h2>Rangi ya app</h2>
+      <div id="themeList"></div>
+    </section>
+<button type="button" id="langBtn" hidden></button>
+    <section class="card">
+      <h2>Arifa za magoli</h2>
+      <div class="srow2"><span id="notifTxt"></span><button type="button" class="btn" id="setNotif">Washa</button></div>
+      <p class="note">Arifa zinafanya kazi app ikiwa wazi au nyuma ya simu. Bonyeza kengele kwenye mechi unayotaka kufuatilia.</p>
+    </section>
+    <section class="card">
+      <h2>Sauti</h2>
+      <div class="srow2"><span id="soundTxt"></span><button type="button" class="btn" id="soundBtn">Zima</button></div>
+      <div class="srow2"><span>Jaribu sauti</span><span style="display:flex;gap:8px"><button type="button" class="btn" id="tryChime">Arifa</button><button type="button" class="btn" id="tryGoal">Goli</button></span></div>
+    </section>
+    <section class="card">
+      <h2>Admin</h2>
+      <div class="srow2"><span id="admTxt"></span><button type="button" class="btn" id="admBtn">Ingia</button></div>
+    </section>
+    <section class="card" id="acct">
+      <h2>Akaunti</h2>
+      <div id="acctOut"></div>
+    </section>
+  </section>
+
+  <!-- ================= LIGI ================= -->
+  <section id="v-leagues" class="wrap" style="gap:8px" hidden>
+    <p class="note" style="margin:0">Gusa ligi kuona mechi zake.</p>
+    <div id="lgList"></div>
+  </section>
+  <section id="v-league" class="wrap" style="gap:12px" hidden>
+    <button type="button" class="backarrow" id="lBack" aria-label="Rudi">&#8592;</button>
+    <div class="lg big" id="lgHead"></div>
+    <div id="lgMatches"></div>
+  </section>
+
+  <!-- ================= MECHI MOJA ================= -->
+  <section id="v-detail" class="wrap" style="gap:12px" hidden>
+    <button type="button" class="backarrow" id="dBack" aria-label="Rudi">&#8592;</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn" id="dAnalyze">Changanua mechi hii</button>
+      <button type="button" class="btn" id="dFollow">☆ Fuata mechi</button>
+    </div>
+    <section class="card">
+      <div class="dleague" id="dLeague"></div>
+      <div class="dhead">
+        <b id="dH">–</b><span class="dscore" id="dScore">–</span><b id="dA">–</b>
+      </div>
+      <div class="dstat" id="dStatus"></div>
+    </section>
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Maelezo ya mechi">
+        <button type="button" class="tab" role="tab" id="dt-form" aria-selected="true">Muhtasari</button>
+        <button type="button" class="tab" role="tab" id="dt-stats" aria-selected="false">Takwimu</button>
+        <button type="button" class="tab" role="tab" id="dt-lineup" aria-selected="false">Line-up</button>
+      </div>
+      <div id="dp-form"></div>
+      <div id="dp-stats" hidden></div>
+      <div id="dp-lineup" hidden></div>
+    </section>
+  </section>
+
+  <!-- ================= CHANGANUA ================= -->
+  <section id="v-analyze" class="wrap" hidden>
+    <button type="button" class="backarrow" id="aBack" aria-label="Rudi">&#8592;</button>
+    <div class="banner" id="banner" hidden></div>
+
+    <form id="f" autocomplete="off">
+      <section class="card">
+        <h2>1. Wastani wa ligi nzima</h2>
+        <div class="grid2">
+          <label>Magoli ya nyumbani kwa mechi
+            <input id="lh" type="number" inputmode="decimal" step="0.01" min="0.1" value="1.45"></label>
+          <label>Magoli ya ugenini kwa mechi
+            <input id="la" type="number" inputmode="decimal" step="0.01" min="0.1" value="1.10"></label>
+        </div>
+        <p class="note">Hesabu: jumla ya magoli yote ya nyumbani ÷ idadi ya mechi zote za msimu.</p>
+      </section>
+
+      <section class="card">
+        <h2>2. Timu mbili na magoli</h2>
+        <label style="margin-bottom:12px">Takwimu za timu zinatoka wapi?
+          <select id="basis">
+            <option value="all" selected>Mechi zote (nyumbani na ugenini)</option>
+            <option value="venue">Nyumbani kwa timu A, ugenini kwa timu B</option>
+          </select></label>
+        <div class="grid2">
+          <div class="team" id="gA"></div>
+          <div class="team" id="gB"></div>
+        </div>
+        <p class="note">Namba zote za mwanzo ni mfano wa kujifunzia. Weka namba halisi za mechi 5 hadi 10 za mwisho. Ukibadilisha asilimia ya kipindi cha 1, ya kipindi cha 2 inabadilika yenyewe.</p>
+      </section>
+
+      <details class="card" open>
+        <summary>3. Kona, mashuti na kadi</summary>
+        <div class="grid2">
+          <div class="team" id="xA"></div>
+          <div class="team" id="xB"></div>
+        </div>
+        <p class="note">Wastani kwa mechi. Hesabu kadi zote (njano na nyekundu) kama kadi moja kila moja.</p>
+      </details>
+
+      <details class="card">
+        <summary>4. Mtindo wa kucheza na ubora</summary>
+        <div class="grid2">
+          <div class="team" id="yA"></div>
+          <div class="team" id="yB"></div>
+        </div>
+        <p class="note">Viwango 1 hadi 10, na 5 ni wastani. Mitindo na viwango ni marekebisho ya makadirio, siyo sheria. Ukiacha 5 na "Mchanganyiko" kote, hakuna marekebisho yanayofanyika.</p>
+      </details>
+
+      <details class="card">
+        <summary>5. Mistari ya kubashiri</summary>
+        <div class="grid2">
+          <label>Mstari wa kona (jumla)
+            <input id="lineK" type="number" inputmode="decimal" step="0.5" min="0" value="9.5"></label>
+          <label>Mstari wa mashuti yaliyolenga
+            <input id="lineS" type="number" inputmode="decimal" step="0.5" min="0" value="8.5"></label>
+          <label>Mstari wa kadi (jumla)
+            <input id="lineC" type="number" inputmode="decimal" step="0.5" min="0" value="4.5"></label>
+          <label>Wastani wa kadi za mwamuzi (hiari)
+            <input id="ref" type="number" inputmode="decimal" step="0.1" min="0" value="" placeholder="mf. 4.2"></label>
+        </div>
+        <p class="note">Tumia mistari yenye .5 (mfano 9.5) ili kusiwe na matokeo ya "sawa". Mwamuzi akijulikana, wastani wake unachanganywa na wa timu.</p>
+      </details>
+
+      <button type="button" class="btn" id="resetBtn">Rudisha namba za mfano</button>
+    </form>
+
+    <section class="card">
+      <h2>Magoli yanayotarajiwa</h2>
+      <div class="lam">
+        <div><b id="lamA">–</b><span id="lamAn"></span></div>
+        <div><b id="lamB">–</b><span id="lamBn"></span></div>
+      </div>
+      <p class="note" id="adjNote"></p>
+    </section>
+
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Matokeo">
+        <button type="button" class="tab" role="tab" id="t-goals" aria-controls="p-goals" aria-selected="true">Magoli</button>
+        <button type="button" class="tab" role="tab" id="t-halves" aria-controls="p-halves" aria-selected="false">Vipindi 1 na 2</button>
+        <button type="button" class="tab" role="tab" id="t-extra" aria-controls="p-extra" aria-selected="false">Kona, kadi, mashuti</button>
+      </div>
+
+      <div id="p-goals" role="tabpanel" aria-labelledby="t-goals">
+        <h3>Nani anashinda (dakika 90)?</h3>
+        <div class="bar" id="bar" role="img" aria-label="Uwezekano wa ushindi, sare na kushindwa"></div>
+        <div class="legend" id="legend"></div>
+        <h3>Masoko ya magoli</h3>
+        <div class="rows" id="rows"></div>
+        <h3>Matokeo 5 yenye uwezekano mkubwa</h3>
+        <div class="top" id="top"></div>
+        <h3>Jedwali la matokeo kamili</h3>
+        <p class="note" style="margin:0 0 10px">Mistari ni magoli ya <span class="tnA"></span>, safu ni magoli ya <span class="tnB"></span>. Rangi nzito ni uwezekano mkubwa.</p>
+        <div class="scroll"><table id="grid"></table></div>
+      </div>
+
+      <div id="p-halves" role="tabpanel" aria-labelledby="t-halves" hidden>
+        <h3>Magoli kwa kipindi</h3>
+        <div class="rows" id="hShare"></div>
+        <h3>Matokeo ya nusu (kipindi cha 1)</h3>
+        <div class="bar" id="htBar" role="img" aria-label="Uwezekano wa matokeo ya nusu"></div>
+        <div class="legend" id="htLegend"></div>
+        <h3>Kipindi cha 2 peke yake</h3>
+        <div class="bar" id="shBar" role="img" aria-label="Uwezekano wa matokeo ya kipindi cha 2"></div>
+        <div class="legend" id="shLegend"></div>
+        <h3>Zaidi</h3>
+        <div class="rows" id="hRows"></div>
+        <h3>Matokeo ya nusu yenye uwezekano mkubwa</h3>
+        <div class="top" id="htTop"></div>
+        <h3>Nusu na mwisho</h3>
+        <p class="note" style="margin:0 0 10px">Mstari ni nani anaongoza nusu, safu ni nani anashinda mwisho.</p>
+        <div class="scroll"><table id="htft"></table></div>
+      </div>
+
+      <div id="p-extra" role="tabpanel" aria-labelledby="t-extra" hidden>
+        <h3>Kona</h3>
+        <div class="rows" id="kBlock"></div>
+        <h3>Mashuti yaliyolenga lango</h3>
+        <div class="rows" id="sBlock"></div>
+        <h3>Kadi</h3>
+        <div class="rows" id="cBlock"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Inavyokokotolewa</h2>
+      <ol class="steps">
+        <li>Magoli, takwimu za mechi zote: ushambulizi wa timu × udhaifu wa ulinzi wa pinzani × faida ya nyumbani, kulingana na wastani wa ligi. Ukichagua "Nyumbani/ugenini", faida ya nyumbani inatoka kwenye takwimu zenyewe.</li>
+        <li>Poisson: <code>P(k) = e^(-λ) × λ^k ÷ k!</code> ni uwezekano wa kupata matukio k kamili. Inatumika kwa magoli, kona, mashuti na kadi.</li>
+        <li>Vipindi: magoli yanayotarajiwa yanagawanywa kwa asilimia ya kipindi cha 1 (wastani wa timu mbili). Kila kipindi kinahesabiwa chenyewe, kisha vinajumlishwa kupata nusu na mwisho.</li>
+        <li>Kona na mashuti: (kile timu inapiga + kile pinzani inaruhusu) ÷ 2.</li>
+        <li>Kadi: wastani wa kadi za kila timu, ukichanganywa 50/50 na wa mwamuzi kama umeuweka.</li>
+      </ol>
+      <h3>Marekebisho ya mtindo na ubora</h3>
+      <p class="note" style="margin-top:0">Mtindo wa kushambulia unabadilisha timu yenyewe. Mtindo wa kujilinda unabadilisha namba za pinzani. Yote ni makadirio ya kawaida, siyo sheria ya kisayansi.</p>
+      <div class="rows stack" id="styleTable"></div>
+      <div class="rows stack" style="margin-top:8px">
+        <div class="row"><span>Kila pointi 1 ya ushambulizi juu ya 5</span><b>magoli, kona, mashuti +4%</b></div>
+        <div class="row"><span>Kila pointi 1 ya ulinzi wa pinzani juu ya 5</span><b>magoli yako −4%</b></div>
+        <div class="row"><span>Kila pointi 1 ya kiungo mbele ya pinzani</span><b>+2% kwako, −2% kwa pinzani</b></div>
+      </div>
+    </section>
+  </section>
+
+  <p class="warn">Hii ni makadirio kutokana na takwimu, siyo uhakika. Majeruhi, kadi nyekundu, mwamuzi na hali ya mchezo hubadilisha mambo mengi. Takwimu za mechi chache zinapotosha kwa urahisi. Usiweke pesa usiyoweza kupoteza.</p>
+</div>
+
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var EN = false;
+  EN = true;
+  function T(sw, en) { return EN ? en : sw; }
+  var API = "https://site.api.espn.com/apis/site/v2/sports/soccer/";
+  var KEY = "bb-v1";
+  var f = $("f");
+  var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var DAYS3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  /* ---------- mitindo ---------- */
+  var ATK = {
+    bal:  { n: "Mchanganyiko", g: 1, k: 1, s: 1 },
+    poss: { n: "Possession (kumiliki mpira)", g: 1.03, k: 1.08, s: 1.05 },
+    long: { n: "Long ball (mipira mirefu)", g: 0.97, k: 1.05, s: 0.95 },
+    cnt:  { n: "Counter (kushtukiza)", g: 0.98, k: 0.92, s: 0.92 },
+    qcnt: { n: "Quick counter (kushtukiza haraka)", g: 1.02, k: 0.90, s: 0.93 },
+    wide: { n: "Out wide (pembeni na krosi)", g: 1, k: 1.15, s: 1 },
+    att:  { n: "Kushambulia sana", g: 1.05, k: 1.10, s: 1.08 }
+  };
+  var DEF = {
+    bal:   { n: "Mchanganyiko", g: 1, k: 1, s: 1, c: 1 },
+    low:   { n: "Kujilinda sana (low block)", g: 0.93, k: 1.10, s: 0.90, c: 1.05 },
+    press: { n: "Presha ya juu (high press)", g: 1, k: 0.97, s: 0.95, c: 1.08 }
+  };
+  function optsOf(o) { return Object.keys(o).map(function (k) { return [k, o[k].n]; }); }
+  function pctDelta(x) { var d = Math.round((x - 1) * 100); return (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d) + "%"; }
+  (function styleTable() {
+    var h = "";
+    Object.keys(ATK).forEach(function (k) {
+      if (k === "bal") return;
+      var a = ATK[k];
+      h += '<div class="row"><span>Kushambulia: ' + a.n + '</span><b>magoli ' + pctDelta(a.g) + ', kona ' + pctDelta(a.k) + ', mashuti ' + pctDelta(a.s) + '</b></div>';
+    });
+    Object.keys(DEF).forEach(function (k) {
+      if (k === "bal") return;
+      var d = DEF[k];
+      h += '<div class="row"><span>Kujilinda: ' + d.n + '</span><b>pinzani: magoli ' + pctDelta(d.g) + ', kona ' + pctDelta(d.k) + ', mashuti ' + pctDelta(d.s) + '; kadi zako ' + pctDelta(d.c) + '</b></div>';
+    });
+    $("styleTable").innerHTML = h;
+  })();
+
+  /* ---------- fomu ---------- */
+  function fld(p, k, label, val, step, min, max) {
+    return '<label>' + label + '<input id="' + p + '_' + k + '" type="number" inputmode="decimal" step="' + step +
+      '" min="' + min + '"' + (max ? ' max="' + max + '"' : '') + ' value="' + val + '"></label>';
+  }
+  function sel(p, k, label, opts, val) {
+    return '<label>' + label + '<select id="' + p + '_' + k + '">' + opts.map(function (o) {
+      return '<option value="' + o[0] + '"' + (String(o[0]) === String(val) ? " selected" : "") + ">" + o[1] + "</option>";
+    }).join("") + "</select></label>";
+  }
+  var RATE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return [n, String(n)]; });
+  var D = {
+    A: { name: "Timu A", S: 1.8, C: 0.9, H: 45, ST: 5.6, SA: 3.2, KF: 6.2, KA: 3.8, CD: 1.9 },
+    B: { name: "Timu B", S: 1.2, C: 1.5, H: 44, ST: 4.1, SA: 4.8, KF: 4.3, KA: 5.6, CD: 2.3 }
+  };
+  function build(p) {
+    var d = D[p], side = p === "A" ? "nyumbani" : "ugenini";
+    $("g" + p).innerHTML =
+      '<input id="' + p + '_name" class="name" type="text" value="' + d.name + '" aria-label="Jina la timu ' + p + '">' +
+      '<span class="tag">Inacheza ' + side + "</span>" +
+      fld(p, "S", "Magoli inayofunga (kwa mechi)", d.S, 0.01, 0) +
+      fld(p, "C", "Magoli inayofungwa (kwa mechi)", d.C, 0.01, 0) +
+      fld(p, "H", "Magoli ya kipindi cha 1 (%)", d.H, 1, 20, 80) +
+      fld(p, "H2", "Magoli ya kipindi cha 2 (%)", 100 - d.H, 1, 20, 80);
+    $("x" + p).innerHTML =
+      '<div class="th tn' + p + '"></div>' +
+      fld(p, "ST", "Mashuti yaliyolenga: inapiga", d.ST, 0.1, 0) +
+      fld(p, "SA", "Mashuti yaliyolenga: inaruhusu", d.SA, 0.1, 0) +
+      fld(p, "KF", "Kona inazopiga", d.KF, 0.1, 0) +
+      fld(p, "KA", "Kona inazoruhusu", d.KA, 0.1, 0) +
+      fld(p, "CD", "Kadi inazopata", d.CD, 0.1, 0);
+    $("y" + p).innerHTML =
+      '<div class="th tn' + p + '"></div>' +
+      sel(p, "as", "Mtindo wa kushambulia", optsOf(ATK), "bal") +
+      sel(p, "ds", "Mtindo wa kujilinda", optsOf(DEF), "bal") +
+      sel(p, "atk", "Ushambulizi", RATE, 5) +
+      sel(p, "mid", "Kiungo", RATE, 5) +
+      sel(p, "def", "Ulinzi", RATE, 5);
+  }
+  build("A"); build("B");
+
+  /* ---------- hifadhi kwenye simu (hiari) ---------- */
+  function save() {
+    try {
+      var o = {};
+      f.querySelectorAll("input,select").forEach(function (el) { o[el.id] = el.value; });
+      localStorage.setItem(KEY, JSON.stringify(o));
+    } catch (e) {}
+  }
+  function restore() {
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!o) return;
+      f.querySelectorAll("input,select").forEach(function (el) { if (o[el.id] !== undefined) el.value = o[el.id]; });
+    } catch (e) {}
+  }
+  restore();
+
+  /* ---------- hesabu ---------- */
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : 0; }
+  function n0(x) { return String(Math.round(x)); }
+  function pc(x) { return Math.round(x * 100) + "%"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function clamp(x, a, b) { return Math.min(b, Math.max(a, x)); }
+  function pois(l, n) {
+    var p = [Math.exp(-l)];
+    for (var k = 1; k < n; k++) p.push(p[k - 1] * l / k);
+    return p;
+  }
+  function cdf(l, k) {
+    k = Math.floor(k);
+    if (k < 0) return 0;
+    var p = Math.exp(-l), s = p;
+    for (var i = 1; i <= k; i++) { p *= l / i; s += p; }
+    return Math.min(s, 1);
+  }
+  function trio(a) {
+    var s = a[0] + a[1] + a[2];
+    if (!(s > 0)) return [0, 100, 0];
+    var v = a.map(function (x) { return x / s * 100; });
+    var fl = v.map(Math.floor), rest = 100 - fl[0] - fl[1] - fl[2];
+    var idx = [0, 1, 2].sort(function (i, j) { return (v[j] - fl[j]) - (v[i] - fl[i]); });
+    for (var k = 0; k < rest; k++) fl[idx[k]]++;
+    return fl;
+  }
+  function team(p) {
+    return {
+      name: $(p + "_name").value.trim() || ("Timu " + p),
+      S: num(p + "_S"), C: num(p + "_C"), H: num(p + "_H"),
+      ST: num(p + "_ST"), SA: num(p + "_SA"), KF: num(p + "_KF"), KA: num(p + "_KA"), CD: num(p + "_CD"),
+      as: ATK[$(p + "_as").value] ? $(p + "_as").value : "bal",
+      ds: DEF[$(p + "_ds").value] ? $(p + "_ds").value : "bal",
+      atk: +$(p + "_atk").value, mid: +$(p + "_mid").value, def: +$(p + "_def").value
+    };
+  }
+  function bar(id, legId, w, d, l, nA, nB) {
+    var t = trio([w, d, l]);
+    $(id).innerHTML =
+      '<div class="h" style="flex:' + Math.max(w, 0.02) + '">' + t[0] + "%</div>" +
+      '<div class="d" style="flex:' + Math.max(d, 0.02) + '">' + t[1] + "%</div>" +
+      '<div class="a" style="flex:' + Math.max(l, 0.02) + '">' + t[2] + "%</div>";
+    $(legId).innerHTML = "<span>" + esc(nA) + " ashinde</span><span>Sare</span><span>" + esc(nB) + " ashinde</span>";
+  }
+  function row(l, v) { return '<div class="row"><span>' + l + "</span><b>" + v + "</b></div>"; }
+  function vs(lA, lB) {
+    var n = Math.ceil(Math.max(lA, lB) * 3 + 15), pa = pois(lA, n), pb = pois(lB, n), r = [0, 0, 0];
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
+      var p = pa[i] * pb[j];
+      if (i > j) r[0] += p; else if (i === j) r[1] += p; else r[2] += p;
+    }
+    return r;
+  }
+  function block(id, lA, lB, line, unit, nA, nB, withVs) {
+    var tot = lA + lB, isInt = line === Math.floor(line);
+    var over = 1 - cdf(tot, line);
+    var push = isInt ? cdf(tot, line) - cdf(tot, line - 1) : 0;
+    var under = isInt ? cdf(tot, line - 1) : cdf(tot, line);
+    var h = row("Inatarajiwa: " + esc(nA), n0(lA)) +
+            row("Inatarajiwa: " + esc(nB), n0(lB)) +
+            row("Jumla inayotarajiwa " + unit, n0(tot)) +
+            row("Zaidi ya " + line, pc(over)) +
+            (push > 0 ? row("Sawa na " + line + " (hakuna mshindi)", pc(push)) : "") +
+            row("Chini ya " + line, pc(under));
+    if (withVs) {
+      var t = trio(vs(lA, lB));
+      h += row("Nani zaidi: " + esc(nA) + " / Sare / " + esc(nB), t[0] + "% / " + t[1] + "% / " + t[2] + "%");
+    }
+    $(id).innerHTML = h;
+  }
+  function heat(v, max) { return "rgba(30,0,15," + (0.06 + 0.5 * v / max).toFixed(2) + ")"; }
+
+  function run() {
+    var A = team("A"), B = team("B");
+    var lh = Math.max(num("lh"), 0.1), la = Math.max(num("la"), 0.1);
+    var nA = A.name, nB = B.name;
+    document.querySelectorAll(".tnA").forEach(function (e) { e.textContent = nA; });
+    document.querySelectorAll(".tnB").forEach(function (e) { e.textContent = nB; });
+
+    var md = A.mid - B.mid;
+    var fA = clamp(ATK[A.as].g * DEF[B.ds].g * (1 + 0.04 * (A.atk - 5)) * (1 - 0.04 * (B.def - 5)) * (1 + 0.02 * md), 0.5, 1.8);
+    var fB = clamp(ATK[B.as].g * DEF[A.ds].g * (1 + 0.04 * (B.atk - 5)) * (1 - 0.04 * (A.def - 5)) * (1 - 0.02 * md), 0.5, 1.8);
+    var mu = (lh + la) / 2, lamA, lamB;
+    if ($("basis").value === "venue") {
+      lamA = A.S * B.C / lh * fA;
+      lamB = B.S * A.C / la * fB;
+    } else {
+      lamA = A.S * B.C * lh / (mu * mu) * fA;
+      lamB = B.S * A.C * la / (mu * mu) * fB;
+    }
+
+    $("lamA").textContent = n0(lamA);
+    $("lamB").textContent = n0(lamB);
+    $("lamAn").textContent = nA;
+    $("lamBn").textContent = nB;
+    var adj = [];
+    if (Math.abs(fA - 1) > 0.005) adj.push(esc(nA) + " " + pctDelta(fA));
+    if (Math.abs(fB - 1) > 0.005) adj.push(esc(nB) + " " + pctDelta(fB));
+    $("adjNote").innerHTML = "Namba zimezungushwa kuwa nzima." + (adj.length ? " Marekebisho ya mtindo na ubora yamejumuishwa: " + adj.join(", ") + "." : " Hakuna marekebisho ya mtindo au ubora.");
+
+    /* --- magoli dakika 90 --- */
+    var N = 12, pA = pois(lamA, N), pB = pois(lamB, N);
+    var win = 0, draw = 0, lose = 0, over = 0, btts = 0, scores = [];
+    for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+      var p = pA[i] * pB[j];
+      if (i > j) win += p; else if (i === j) draw += p; else lose += p;
+      if (i + j > 2) over += p;
+      if (i > 0 && j > 0) btts += p;
+      scores.push({ i: i, j: j, p: p });
+    }
+    var tot = win + draw + lose; win /= tot; draw /= tot; lose /= tot; over /= tot; btts /= tot;
+    bar("bar", "legend", win, draw, lose, nA, nB);
+    $("rows").innerHTML =
+      row("Zaidi ya magoli 2.5", pc(over)) +
+      row("Chini ya magoli 2.5", pc(1 - over)) +
+      row("Timu zote mbili zifunge", pc(btts)) +
+      row("Angalau timu moja haifungi", pc(1 - btts));
+    scores.sort(function (a, b) { return b.p - a.p; });
+    $("top").innerHTML = scores.slice(0, 5).map(function (s) {
+      return "<div><span>" + esc(nA) + " " + s.i + " - " + s.j + " " + esc(nB) + "</span><b>" + pc(s.p) + "</b></div>";
+    }).join("");
+    var max = scores[0].p, h = "<tr><th></th>";
+    for (var c = 0; c <= 5; c++) h += "<th>" + c + "</th>";
+    h += "</tr>";
+    for (var r = 0; r <= 5; r++) {
+      h += "<tr><th>" + r + "</th>";
+      for (var c2 = 0; c2 <= 5; c2++) {
+        var v = pA[r] * pB[c2];
+        h += '<td style="background:' + heat(v, max) + '">' + n0(v * 100) + "</td>";
+      }
+      h += "</tr>";
+    }
+    $("grid").innerHTML = h;
+
+    /* --- vipindi --- */
+    var s = clamp((A.H + B.H) / 200, 0.2, 0.7), M = 8;
+    var a1 = pois(lamA * s, M), b1 = pois(lamB * s, M), a2 = pois(lamA * (1 - s), M), b2 = pois(lamB * (1 - s), M);
+    var ht = [0, 0, 0], sh = [0, 0, 0], moreH = [0, 0, 0], tf = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], mass = 0;
+    function k3(x, y) { return x > y ? 0 : x === y ? 1 : 2; }
+    for (var x1 = 0; x1 < M; x1++) for (var y1 = 0; y1 < M; y1++) {
+      var q1 = a1[x1] * b1[y1];
+      for (var x2 = 0; x2 < M; x2++) for (var y2 = 0; y2 < M; y2++) {
+        var q = q1 * a2[x2] * b2[y2], H1 = k3(x1, y1), H2 = k3(x2, y2), F = k3(x1 + x2, y1 + y2);
+        mass += q; ht[H1] += q; sh[H2] += q; tf[H1][F] += q;
+        moreH[x1 + y1 < x2 + y2 ? 0 : x1 + y1 === x2 + y2 ? 1 : 2] += q;
+      }
+    }
+    ht = ht.map(function (z) { return z / mass; });
+    sh = sh.map(function (z) { return z / mass; });
+    moreH = moreH.map(function (z) { return z / mass; });
+    tf = tf.map(function (rw) { return rw.map(function (z) { return z / mass; }); });
+    var s1 = Math.round(s * 100);
+    $("hShare").innerHTML =
+      row("Magoli ya kipindi cha 1", s1 + "%") +
+      row("Magoli ya kipindi cha 2", (100 - s1) + "%") +
+      row("Magoli yanayotarajiwa kipindi cha 1", n0((lamA + lamB) * s)) +
+      row("Magoli yanayotarajiwa kipindi cha 2", n0((lamA + lamB) * (1 - s)));
+    bar("htBar", "htLegend", ht[0], ht[1], ht[2], nA, nB);
+    bar("shBar", "shLegend", sh[0], sh[1], sh[2], nA, nB);
+    var mh = trio(moreH);
+    $("hRows").innerHTML =
+      row("Kipindi cha 2 kina magoli mengi zaidi", mh[0] + "%") +
+      row("Vipindi vyote vina magoli sawa", mh[1] + "%") +
+      row("Kipindi cha 1 kina magoli mengi zaidi", mh[2] + "%");
+    var hs = [];
+    for (var u = 0; u < 5; u++) for (var w2 = 0; w2 < 5; w2++) hs.push({ i: u, j: w2, p: a1[u] * b1[w2] });
+    hs.sort(function (p1, p2) { return p2.p - p1.p; });
+    $("htTop").innerHTML = hs.slice(0, 3).map(function (z) {
+      return "<div><span>" + esc(nA) + " " + z.i + " - " + z.j + " " + esc(nB) + "</span><b>" + pc(z.p) + "</b></div>";
+    }).join("");
+    var lab = ["Nyumbani", "Sare", "Ugenini"], mx = 0;
+    tf.forEach(function (rw) { rw.forEach(function (z) { if (z > mx) mx = z; }); });
+    var t = "<tr><th>Nusu \\ Mwisho</th>" + lab.map(function (l) { return "<th>" + l + "</th>"; }).join("") + "</tr>";
+    for (var m1 = 0; m1 < 3; m1++) {
+      t += "<tr><th>" + lab[m1] + "</th>";
+      for (var m2 = 0; m2 < 3; m2++) t += '<td style="background:' + heat(tf[m1][m2], mx) + '">' + n0(tf[m1][m2] * 100) + "</td>";
+      t += "</tr>";
+    }
+    $("htft").innerHTML = t;
+
+    /* --- kona, mashuti, kadi --- */
+    var cm = 1 + 0.02 * md, cmB = 1 - 0.02 * md;
+    var kA = (A.KF + B.KA) / 2 * ATK[A.as].k * DEF[B.ds].k * (1 + 0.04 * (A.atk - 5)) * cm;
+    var kB = (B.KF + A.KA) / 2 * ATK[B.as].k * DEF[A.ds].k * (1 + 0.04 * (B.atk - 5)) * cmB;
+    var sA = (A.ST + B.SA) / 2 * ATK[A.as].s * DEF[B.ds].s * (1 + 0.04 * (A.atk - 5)) * cm;
+    var sB = (B.ST + A.SA) / 2 * ATK[B.as].s * DEF[A.ds].s * (1 + 0.04 * (B.atk - 5)) * cmB;
+    var cA = A.CD * DEF[A.ds].c, cB = B.CD * DEF[B.ds].c, ref = num("ref");
+    block("kBlock", kA, kB, num("lineK"), "ya kona", nA, nB, true);
+    block("sBlock", sA, sB, num("lineS"), "ya mashuti", nA, nB, true);
+    var cTot = ref > 0 ? 0.5 * (cA + cB) + 0.5 * ref : cA + cB;
+    var scale = cA + cB > 0 ? cTot / (cA + cB) : 1;
+    block("cBlock", cA * scale, cB * scale, num("lineC"), "ya kadi", nA, nB, false);
+  }
+
+  /* ---------- kujaza fomu ---------- */
+  var ctx = null; // takwimu za mechi iliyochaguliwa (mechi zote na nyumbani/ugenini)
+  function setVal(id, v) { var e = $(id); if (e) e.value = String(v); }
+  function r2(x) { return Math.round(x * 100) / 100; }
+  function changed() { save(); run(); }
+  function applyBasis() {
+    if (!ctx) return;
+    var b = ctx[$("basis").value] || ctx.all;
+    setVal("A_S", b.A.S); setVal("A_C", b.A.C); setVal("B_S", b.B.S); setVal("B_C", b.B.C);
+  }
+  f.addEventListener("input", function (e) {
+    var id = e.target.id, m = /^([AB])_(H2?)$/.exec(id);
+    if (m) {
+      var v = parseFloat(e.target.value);
+      if (isFinite(v)) setVal(m[1] + "_" + (m[2] === "H" ? "H2" : "H"), Math.round((100 - v) * 10) / 10);
+    }
+    if (id === "basis") applyBasis();
+    changed();
+  });
+  f.addEventListener("submit", function (e) { e.preventDefault(); });
+  $("resetBtn").addEventListener("click", function () {
+    f.reset(); ctx = null;
+    ["A", "B"].forEach(function (p) { setVal(p + "_H2", 100 - D[p].H); });
+    $("banner").hidden = true;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    run();
+  });
+
+  function applyPreset(pr) {
+    ctx = null;
+    setVal("lh", pr.lh); setVal("la", pr.la); setVal("basis", "all");
+    ["A", "B"].forEach(function (p) {
+      var t = pr[p];
+      setVal(p + "_name", t.name); setVal(p + "_S", t.S); setVal(p + "_C", t.C);
+      setVal(p + "_H", t.H || 45); setVal(p + "_H2", 100 - (t.H || 45));
+      setVal(p + "_ST", t.ST); setVal(p + "_SA", t.SA); setVal(p + "_KF", t.KF); setVal(p + "_KA", t.KA); setVal(p + "_CD", t.CD);
+      setVal(p + "_as", t.as || "bal"); setVal(p + "_ds", t.ds || "bal");
+      setVal(p + "_atk", t.atk || 5); setVal(p + "_mid", t.mid || 5); setVal(p + "_def", t.def || 5);
+    });
+    setVal("ref", pr.ref || "");
+    showBanner(pr.A.name + " vs " + pr.B.name + " · " + pr.league + ". " + pr.note, pr.warn);
+    changed();
+  }
+  function showBanner(text, warn) {
+    var b = $("banner");
+    b.textContent = text; b.hidden = false;
+    b.className = "banner" + (warn ? " warn" : "");
+  }
+
+  /* ---------- mechi zilizojazwa tayari (zimekusanywa na Claude, 9 Okt 2026) ---------- */
+  var PRESETS = [
+    {
+      kick: "2026-10-09T18:45:00Z", league: "Ligue 1", lh: 1.56, la: 1.29, ref: 3.8,
+      A: { name: "Lens", S: 1.8, C: 1.8, ST: 4.6, SA: 4.5, KF: 7.0, KA: 5.0, CD: 1.4, def: 4 },
+      B: { name: "Lyon", S: 2.0, C: 0.4, ST: 4.4, SA: 4.5, KF: 4.4, KA: 5.0, CD: 1.6 },
+      note: "Mechi 5 kwa kila timu. Mashuti na kona zinazoruhusiwa ni makadirio. Lyon amefungwa magoli 2 tu, kwa hiyo makadirio ni makali kupita kiasi.", warn: true
+    },
+    {
+      kick: "2026-10-09T18:30:00Z", league: "Bundesliga", lh: 2.39, la: 1.42,
+      A: { name: "Dortmund", S: 2.25, C: 0.5, ST: 3.5, SA: 4.5, KF: 3.8, KA: 5.0, CD: 2.5 },
+      B: { name: "Werder Bremen", S: 2.0, C: 2.0, ST: 5.0, SA: 4.5, KF: 3.5, KA: 5.0, CD: 1.3, atk: 4, mid: 4 },
+      note: "Mechi 4 kwa kila timu. Mashuti na kona zinazoruhusiwa ni makadirio. Bremen hana wachezaji 8.", warn: true
+    }
+  ];
+  /* ---------- tarehe na saa ---------- */
+  function pad(n) { return ("0" + n).slice(-2); }
+  function hhmm(d) { return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function ymd(d) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); }
+  function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function dayLabel(d) {
+    var t0 = startOfDay(new Date()), t1 = startOfDay(d), diff = Math.round((t1 - t0) / 86400000);
+    var base = DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()];
+    return diff === 0 ? "Today, " + base : base;
+  }
+
+  /* ---------- mechi za moja kwa moja ---------- */
+  var LCODES = [
+    [/english-premier-league/, "eng.1"], [/german-bundesliga/, "ger.1"], [/(^|-)laliga$|spanish-la-?liga/, "esp.1"],
+    [/italian-serie-a/, "ita.1"], [/(^|-)ligue-1$|french-ligue-1/, "fra.1"], [/dutch-eredivisie/, "ned.1"],
+    [/portuguese-primeira-liga/, "por.1"], [/brazilian-serie-a/, "bra.1"]
+  ];
+  var CATS = [["all", "Zote"], ["epl", "EPL"], ["laliga", "La Liga"], ["bund", "Bundesliga"], ["seriea", "Serie A"],
+    ["l1", "Ligue 1"], ["euro", "Ulaya (UCL/UEL)"], ["nat", "Timu za taifa"], ["other", "Nyingine"]];
+  function catOf(e) {
+    var t = (e.slug + " " + e.league).toLowerCase();
+    if (/english-premier-league|premier league/.test(t) && !/women|u\d\d/.test(t)) return "epl";
+    if (/laliga|la-liga|la liga/.test(t) && !/2/.test(e.slug.replace(/\d{4}-\d{2}/, ""))) return "laliga";
+    if (/german-bundesliga|^bundesliga$/.test(t) || (/bundesliga/.test(t) && !/2|austria/.test(t))) return "bund";
+    if (/italian-serie-a|serie a/.test(t) && !/brazil|brasil/.test(t)) return "seriea";
+    if (/french-ligue-1|ligue 1/.test(t)) return "l1";
+    if (/champions league|europa league|conference league/.test(t)) return "euro";
+    if (/nations league|world cup|qualif|friendl|european championship|euro 20|afcon|africa cup|copa am|international|olympic|concacaf|gold cup|asian cup/.test(t)) return "nat";
+    return "other";
+  }
+  function leagueCode(e) {
+    for (var i = 0; i < LCODES.length; i++) if (LCODES[i][0].test(e.slug)) return LCODES[i][1];
+    return null;
+  }
+  function prettySlug(s) {
+    s = String(s || "").replace(/^\d{4}-\d{2}-/, "").replace(/-/g, " ").trim();
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  }
+  function toInt(x) {
+    var v = x && typeof x === "object" ? (x.displayValue !== undefined ? x.displayValue : x.value) : x;
+    v = parseInt(v, 10);
+    return isFinite(v) ? v : 0;
+  }
+  function parseEvents(json) {
+    var out = [];
+    (json.events || []).forEach(function (e) {
+      var c = (e.competitions && e.competitions[0]) || {}, cs = c.competitors || [], h = null, a = null;
+      cs.forEach(function (x) { if (x.homeAway === "home") h = x; else if (x.homeAway === "away") a = x; });
+      if (!h || !a || !h.team || !a.team) return;
+      var st = e.status || c.status || {}, ty = st.type || {}, slug = (e.season && e.season.slug) || "";
+      var note = c.altGameNote || "";
+      out.push({
+        id: String(e.id), lid: ((/l:(\d+)/.exec(e.uid || "")) || [0, ""])[1], date: new Date(e.date), state: ty.state || "pre", detail: ty.shortDetail || ty.detail || "",
+        league: note || prettySlug(slug), slug: slug,
+        h: { id: String(h.team.id), name: h.team.shortDisplayName || h.team.displayName || "?", score: toInt(h.score), logo: h.team.logo || "" },
+        a: { id: String(a.team.id), name: a.team.shortDisplayName || a.team.displayName || "?", score: toInt(a.score), logo: a.team.logo || "" }
+      });
+    });
+    return out;
+  }
+  function getJSON(url) {
+    return fetch(url, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    });
+  }
+  /* ---------- kufuata mechi na arifa za magoli ---------- */
+  var FOLLOW = {}, NOTIF = false, toastT = null, PREV = {};
+  try {
+    FOLLOW = JSON.parse(localStorage.getItem("bb-follow") || "{}") || {};
+    Object.keys(FOLLOW).forEach(function (k) { if (Date.now() - FOLLOW[k] > 3 * 86400000) delete FOLLOW[k]; });
+    NOTIF = localStorage.getItem("bb-notif") === "1" && "Notification" in window && Notification.permission === "granted";
+  } catch (e) {}
+  function saveFollow() { try { localStorage.setItem("bb-follow", JSON.stringify(FOLLOW)); } catch (e) {} syncSW(); }
+  /* arifa app ikiwa imefungwa: tuma hali kwa Service Worker, omba background sync, shikilia ukurasa hai */
+  var LOCKED = false;
+  function syncSW() {
+    try {
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.ready.then(function (r) {
+        var w = r.active || navigator.serviceWorker.controller;
+        if (w) w.postMessage({ type: "bb-state", follow: FOLLOW, prev: PREV, notif: NOTIF, en: typeof EN !== "undefined" && !!EN });
+      }).catch(function () {});
+      regPeriodic();
+      keepAlive();
+    } catch (e) {}
+  }
+  function regPeriodic() {
+    try {
+      if (!NOTIF || !("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.ready.then(function (r) {
+        if (r.periodicSync && r.periodicSync.register) r.periodicSync.register("bb-goals", { minInterval: 60000 }).catch(function () {});
+        if (r.sync && r.sync.register) r.sync.register("bb-goals").catch(function () {});
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function keepAlive() {
+    try {
+      if (LOCKED || !NOTIF || !navigator.locks || !Object.keys(FOLLOW).length) return;
+      LOCKED = true;
+      navigator.locks.request("bb-keepalive", function () { return new Promise(function () {}); }).catch(function () { LOCKED = false; });
+    } catch (e) { LOCKED = false; }
+  }
+  function toggleFollow(id) { if (FOLLOW[id]) delete FOLLOW[id]; else FOLLOW[id] = Date.now(); saveFollow(); }
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 6000);
+  }
+  var AC = null, SOUND = true;
+  try { SOUND = localStorage.getItem("bb-sound") !== "0"; } catch (e) {}
+  function actx() {
+    try {
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); }
+      if (AC && AC.state === "suspended") AC.resume();
+    } catch (e) {}
+    return AC;
+  }
+  document.addEventListener("pointerdown", function () { actx(); }, { passive: true });
+  function tone(f, t0, dur, vol) {
+    var o = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain(), g2 = AC.createGain();
+    o.type = "sine"; o2.type = "sine"; o.frequency.value = f; o2.frequency.value = f * 2.01; g2.gain.value = 0.22;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(AC.destination);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.start(t0); o2.start(t0); o.stop(t0 + dur + 0.05); o2.stop(t0 + dur + 0.05);
+  }
+  function chime(kind) {
+    if (!SOUND) return;
+    try {
+      var a = actx(); if (!a) return;
+      var t = a.currentTime + 0.02;
+      var seq = kind === "goal" ? [[523.25, 0], [659.25, 0.13], [783.99, 0.26], [1046.5, 0.4], [1318.5, 0.58]] : [[880, 0], [1318.5, 0.16]];
+      seq.forEach(function (n) { tone(n[0], t + n[1], kind === "goal" ? 0.9 : 0.7, 0.2); });
+    } catch (e) {}
+  }
+  function notify(title, body, tag, kind) {
+    toast(title + " " + body);
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    chime(kind);
+    if (!NOTIF) return;
+    var opts = { body: body, icon: "icon-192.png", badge: "icon-192.png", tag: tag || "bb", renotify: true, vibrate: [200, 100, 200] };
+    function fb() { try { new Notification(title, { body: body, icon: "icon-192.png" }); } catch (e) {} }
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(function (r) { return r.showNotification(title, opts); }).catch(fb);
+      else fb();
+    } catch (e) { fb(); }
+  }
+  function paintBell() { $("bellBtn").textContent = NOTIF ? "🔔" : "🔕"; if (typeof paintNotifSettings === "function") paintNotifSettings(); }
+  paintBell();
+  $("bellBtn").addEventListener("click", function () {
+    if (NOTIF) {
+      NOTIF = false; try { localStorage.setItem("bb-notif", "0"); } catch (e) {}
+      paintBell(); syncSW(); toast(T("Arifa zimezimwa.", "Alerts turned off.")); return;
+    }
+    if (!("Notification" in window)) { toast(T("Simu hii haiungi arifa.", "This device does not support notifications.")); return; }
+    Notification.requestPermission().then(function (p) {
+      if (p === "granted") {
+        NOTIF = true; try { localStorage.setItem("bb-notif", "1"); } catch (e) {}
+        paintBell(); syncSW();
+        notify("✅ " + T("Arifa zimewashwa", "Alerts are on"), T("Bonyeza 🔕 kwenye mechi unazotaka kufuatilia. Ukiwa nje ya app arifa zinaweza kuchelewa; acha app wazi kwa arifa za papo hapo.", "Tap 🔕 on the matches you want to follow. With the app closed alerts may be delayed; keep it open for instant alerts."), "bb-welcome");
+      } else toast(T("Ruhusa ya arifa imekataliwa. Iwashe kwenye mipangilio ya Chrome.", "Notification permission was denied. Enable it in Chrome settings."));
+    });
+  });
+  function track(evs) {
+    evs.forEach(function (e) {
+      var p = PREV[e.id];
+      if (p && FOLLOW[e.id]) {
+        var nm = e.h.name + " " + e.h.score + " - " + e.a.score + " " + e.a.name;
+        if (p.state === "pre" && e.state === "in") notify("▶ " + T("Mechi imeanza", "Kick-off"), e.h.name + " vs " + e.a.name, e.id);
+        if (e.h.score > p.hs || e.a.score > p.as) notify("⚽ " + T("GOLI!", "GOAL!") + " " + (e.detail || ""), nm, e.id, "goal");
+        else if (e.h.score < p.hs || e.a.score < p.as) notify(T("Goli limeondolewa (VAR)", "Goal disallowed (VAR)"), nm, e.id);
+        if (p.state === "in" && e.state === "post") notify("🏁 " + T("Mechi imeisha", "Full time"), nm, e.id);
+      }
+      PREV[e.id] = { hs: e.h.score, as: e.a.score, state: e.state };
+    });
+    syncSW();
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && L.events.length && followActive()) pollLive();
+  });
+  if (NOTIF) setTimeout(syncSW, 1500);
+  function followActive() {
+    return Object.keys(FOLLOW).some(function (id) {
+      var e = L.byId[id];
+      return e && (e.state === "in" || (e.state === "pre" && e.date.getTime() - Date.now() < 3 * 3600000));
+    });
+  }
+  function pollLive() {
+    var jobs = [0, -1].map(function (i) {
+      var d = new Date(); d.setDate(d.getDate() + i);
+      return getJSON(API + "all/scoreboard?dates=" + ymd(d)).then(parseEvents, function () { return null; });
+    });
+    return Promise.all(jobs).then(function (res) {
+      var fresh = [];
+      res.forEach(function (r) { if (r) fresh = fresh.concat(r); });
+      if (!fresh.length) return;
+      fresh.forEach(function (n) {
+        var old = L.byId[n.id];
+        if (old) { Object.keys(n).forEach(function (k) { old[k] = n[k]; }); }
+        else { L.events.push(n); L.byId[n.id] = n; }
+      });
+      track(fresh);
+      L.at = new Date();
+      if (view === "matches") renderList(); else if (view === "league") renderLeague();
+      if (dCur && L.byId[dCur.id]) paintDetailHead(L.byId[dCur.id]);
+    });
+  }
+  setInterval(function () {
+    if ((NOTIF || !document.hidden) && L.events.length && followActive()) pollLive();
+  }, 30000);
+
+  var L = { events: [], byId: {}, at: null, loading: false, league: "", liveOnly: false, day: "", q: "", fail: 0 };
+
+  function loadList(silent) {
+    if (L.loading) return;
+    L.loading = true;
+    if (!silent) $("listStatus").textContent = "Napakia mechi...";
+    var jobs = [];
+    for (var i = -1; i <= 4; i++) {
+      var d = new Date(); d.setDate(d.getDate() + i);
+      jobs.push(getJSON(API + "all/scoreboard?dates=" + ymd(d)).then(parseEvents, function () { return null; }));
+    }
+    Promise.all(jobs).then(function (res) {
+      var ok = 0, seen = {}, all = [];
+      res.forEach(function (r) {
+        if (!r) return;
+        ok++;
+        r.forEach(function (e) { if (!seen[e.id]) { seen[e.id] = 1; all.push(e); } });
+      });
+      L.loading = false;
+      if (!ok) {
+        L.fail = 1;
+        $("listStatus").textContent = "Mechi hazikupatikana. Angalia mtandao kisha bonyeza Onyesha upya.";
+        renderList();
+        return;
+      }
+      L.fail = 0;
+      L.events = all.sort(function (a, b) { return a.date - b.date; });
+      L.byId = {}; all.forEach(function (e) { L.byId[e.id] = e; });
+      L.at = new Date();
+      track(all);
+      renderList();
+    });
+  }
+  function crest(url, name) {
+    var ini = esc(String(name || "?").replace(/[^A-Za-z\u00C0-\u024F]/g, "").slice(0, 2).toUpperCase() || "?");
+    return url && /^https:\/\//.test(url)
+      ? '<img class="crest" src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="' + ini + '">'
+      : '<span class="crest ph">' + ini + "</span>";
+  }
+  function fl(c) { return String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65, 0x1F1E6 + c.charCodeAt(1) - 65); }
+  var ENG = "\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F";
+  var FLAGS = [[/brasil|brazil/i, "BR"], [/laliga|la liga|copa del rey|spanish|spain/i, "ES"], [/bundesliga|german|dfb/i, "DE"],
+    [/serie a|serie b|italian|coppa italia/i, "IT"], [/ligue|french/i, "FR"], [/eredivisie|dutch/i, "NL"],
+    [/primeira|portuguese|liga portugal/i, "PT"], [/liga mx|mexic/i, "MX"], [/\bmls\b|major league soccer/i, "US"],
+    [/argentin/i, "AR"], [/turk|super lig/i, "TR"], [/belgi/i, "BE"], [/saudi/i, "SA"], [/japan|j\.? ?league/i, "JP"], [/australia|a-league/i, "AU"]];
+  function flagOf(e) {
+    var t = e.slug + " " + e.league;
+    if (/english|premier league|efl|championship|fa cup|carabao|league one|league two/i.test(t) && !/scottish/i.test(t)) return ENG;
+    for (var i = 0; i < FLAGS.length; i++) if (FLAGS[i][0].test(t)) return fl(FLAGS[i][1]);
+    var c = catOf(e);
+    return c === "euro" || c === "nat" ? "\uD83C\uDF0D" : "\u26BD";
+  }
+  function lgLogo(e) {
+    return e.lid ? '<img class="lgi" src="https://a.espncdn.com/i/leaguelogos/soccer/500/' + esc(e.lid) + '.png" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="' + flagOf(e) + '">'
+      : '<span class="crest ph lgi">' + flagOf(e) + "</span>";
+  }
+  document.addEventListener("error", function (ev) {
+    var t = ev.target;
+    if (!t || t.tagName !== "IMG" || !t.dataset.ini) return;
+    var sp = document.createElement("span");
+    sp.className = "crest ph" + (t.classList.contains("lgi") ? " lgi" : "");
+    sp.textContent = t.dataset.ini;
+    if (t.parentNode) t.parentNode.replaceChild(sp, t);
+  }, true);
+  function matchRow(e) {
+    var live = e.state === "in", fin = e.state === "post", stat;
+    if (live) stat = '<span class="mstat live"><span class="dot"></span>' + esc(e.detail || "LIVE") + "</span>";
+    else if (fin) stat = '<span class="mstat fin">' + esc(/postpone|cancel|abandon/i.test(e.detail) ? e.detail : "FT") + "</span>";
+    else stat = '<span class="mstat">' + hhmm(e.date) + "</span>";
+    var sc = (live || fin) ? '<span class="msc"><span>' + e.h.score + "</span><span>" + e.a.score + "</span></span>" : '<span class="msc"><span>–</span><span>–</span></span>';
+    return '<button type="button" class="mrow" data-id="' + esc(e.id) + '">' + stat +
+      '<span class="mt"><span class="tl">' + crest(e.h.logo, e.h.name) + "<b>" + esc(e.h.name) + '</b></span><span class="tl">' + crest(e.a.logo, e.a.name) + "<b>" + esc(e.a.name) + "</b></span></span>" + sc +
+      '<span class="star' + (FOLLOW[e.id] ? " on" : "") + '" role="button" tabindex="0" data-star="' + esc(e.id) + '" aria-label="' + T("Fuata mechi", "Follow match") + '">' + (FOLLOW[e.id] ? "🔔" : "🔕") + "</span></button>";
+  }
+  var CATORD = { epl: 0, laliga: 1, bund: 2, seriea: 3, l1: 4, euro: 5, nat: 6, other: 7 };
+  function dayKeys() {
+    var out = [];
+    for (var i = -1; i <= 4; i++) { var d = new Date(); d.setDate(d.getDate() + i); out.push({ key: ymd(d), d: d, off: i }); }
+    return out;
+  }
+  function renderDays() {
+    $("dayTabs").innerHTML = dayKeys().map(function (x) {
+      var top = x.off === 0 ? "Today" : x.off === -1 ? "Yesterday" : DAYS3[x.d.getDay()];
+      return '<button type="button" class="dtab" role="tab" data-day="' + x.key + '" aria-selected="' + (L.day === x.key && !L.liveOnly) + '"><b>' + top + "</b><small>" + x.d.getDate() + " " + MONTHS[x.d.getMonth()] + "</small></button>";
+    }).join("");
+  }
+  function renderList() {
+    if (!L.day) L.day = ymd(new Date());
+    var q = L.q.trim().toLowerCase(), dk = {};
+    dayKeys().forEach(function (x) { dk[x.key] = 1; });
+    var liveN = L.events.filter(function (e) { return e.state === "in"; }).length;
+    $("liveN").textContent = String(liveN);
+    $("liveBtn").setAttribute("aria-pressed", L.liveOnly ? "true" : "false");
+    var inDay = L.events.filter(function (e) {
+      if (L.liveOnly) return e.state === "in";
+      if (q) return dk[ymd(e.date)] || e.state === "in";
+      return ymd(e.date) === L.day || (e.state === "in" && L.day === ymd(new Date()));
+    });
+    var items = inDay.filter(function (e) {
+      if (q && (e.h.name + " " + e.a.name + " " + e.league).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    var groups = {}, order = [];
+    items.forEach(function (e) {
+      var gk = (q ? ymd(e.date) + "|" : "") + (e.lid || e.league);
+      if (!groups[gk]) { groups[gk] = { e: e, list: [] }; order.push(gk); }
+      groups[gk].list.push(e);
+    });
+    order.sort(function (a, b) {
+      var ga = groups[a], gb = groups[b];
+      if (q && ymd(ga.e.date) !== ymd(gb.e.date)) return ga.e.date - gb.e.date;
+      var ca = CATORD[catOf(ga.e)], cb = CATORD[catOf(gb.e)];
+      return ca !== cb ? ca - cb : ga.e.league.localeCompare(gb.e.league);
+    });
+    var h = "", lastDay = "";
+    order.forEach(function (gk) {
+      var g = groups[gk], e = g.e;
+      if (q && ymd(e.date) !== lastDay) { lastDay = ymd(e.date); h += '<div class="mday">' + dayLabel(e.date) + "</div>"; }
+      h += '<div class="lg">' + lgLogo(e) + '<span class="lgn">' + esc(e.league) + '</span><span class="lgc">' + g.list.length + "</span></div>";
+      g.list.sort(function (a, b) { return (a.state === "in" ? 0 : 1) - (b.state === "in" ? 0 : 1) || a.date - b.date; });
+      g.list.forEach(function (m) { h += matchRow(m); });
+    });
+    if (!items.length && !L.fail) h = '<p class="note">' + (L.liveOnly ? "Hakuna mechi inayoendelea sasa." : "Hakuna mechi inayolingana.") + "</p>";
+    $("list").innerHTML = h;
+    renderDays();
+    if (L.at && !L.fail) {
+      var live = L.events.filter(function (e) { return e.state === "in"; }).length;
+      $("listStatus").textContent = "Imesasishwa " + hhmm(L.at) + (live ? " · mechi " + live + " zinaendelea" : "");
+    }
+  }
+  $("liveBtn").addEventListener("click", function () {
+    L.liveOnly = view === "matches" ? !L.liveOnly : true;
+    if (view !== "matches") navTo("matches");
+    renderList();
+  });
+  $("dayTabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-day]");
+    if (!b) return;
+    L.day = b.getAttribute("data-day"); L.liveOnly = false; renderList();
+  });
+  function rowClick(ev) {
+    var st = ev.target.closest("[data-star]");
+    if (st) {
+      ev.stopPropagation();
+      var id = st.getAttribute("data-star");
+      toggleFollow(id);
+      var on = !!FOLLOW[id];
+      st.classList.toggle("on", on); st.textContent = on ? "🔔" : "🔕";
+      if (on && !NOTIF) toast(T("Unafuata mechi hii. Washa kengele 🔔 juu kupata arifa za magoli.", "You follow this match. Turn on the bell 🔔 at the top for goal alerts."));
+      return;
+    }
+    var b = ev.target.closest("[data-id]");
+    if (b && L.byId[b.getAttribute("data-id")]) openDetail(L.byId[b.getAttribute("data-id")]);
+  }
+  $("list").addEventListener("click", rowClick);
+  $("refreshBtn").addEventListener("click", function () { loadList(false); });
+  setInterval(function () {
+    if (!document.hidden && view === "matches" && L.events.some(function (e) { return e.state === "in"; })) loadList(true);
+  }, 60000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && view === "matches" && L.at && Date.now() - L.at.getTime() > 60000) loadList(true);
+  });
+
+  /* ---------- kujaza takwimu za mechi iliyochaguliwa ---------- */
+  function collect(o, out) {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) { o.forEach(function (x) { collect(x, out); }); return; }
+    if (typeof o.name === "string" && typeof o.value === "number" && !(o.name in out)) out[o.name] = o.value;
+    Object.keys(o).forEach(function (k) { collect(o[k], out); });
+  }
+  function teamStats(lg, id) {
+    return getJSON(API + lg + "/teams/" + id + "?enable=record,stats").then(function (j) {
+      var s = {}; collect(j, s);
+      var gp = s.gamesPlayed || 0;
+      if (!gp) return null;
+      return {
+        gp: gp, pf: s.pointsFor || 0, pa: s.pointsAgainst || 0,
+        hgp: s.homeGamesPlayed || 0, hpf: s.homePointsFor || 0, hpa: s.homePointsAgainst || 0,
+        agp: s.awayGamesPlayed || 0, apf: s.awayPointsFor || 0, apa: s.awayPointsAgainst || 0
+      };
+    }).catch(function () { return null; });
+  }
+  function teamIds(o, out, seen) {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) { o.forEach(function (x) { teamIds(x, out, seen); }); return; }
+    if (o.team && o.team.id && !seen[o.team.id]) { seen[o.team.id] = 1; out.push(String(o.team.id)); }
+    Object.keys(o).forEach(function (k) { teamIds(o[k], out, seen); });
+  }
+  function pool(items, n, fn, onStep) {
+    var res = new Array(items.length), next = 0, done = 0;
+    return new Promise(function (resolve) {
+      function worker() {
+        if (next >= items.length) { if (done >= items.length) resolve(res); return; }
+        var i = next++;
+        Promise.resolve(fn(items[i])).then(function (r) { res[i] = r; }, function () { res[i] = null; }).then(function () {
+          done++; if (onStep) onStep(done, items.length);
+          if (done >= items.length) resolve(res); else worker();
+        });
+      }
+      for (var k = 0; k < Math.min(n, items.length); k++) worker();
+      if (!items.length) resolve(res);
+    });
+  }
+  function leagueAvg(lg, onStep) {
+    var ck = "bb-lg-" + lg;
+    try {
+      var c = JSON.parse(localStorage.getItem(ck) || "null");
+      if (c && Date.now() - c.t < 6 * 3600 * 1000) return Promise.resolve(c.v);
+    } catch (e) {}
+    return getJSON(API + lg + "/teams?limit=50").then(function (j) {
+      var ids = []; teamIds(j, ids, {});
+      return pool(ids, 6, function (id) { return teamStats(lg, id); }, onStep);
+    }).then(function (all) {
+      var hg = 0, hf = 0, ag = 0, af = 0, n = 0;
+      all.forEach(function (t) { if (t) { n++; hg += t.hgp; hf += t.hpf; ag += t.agp; af += t.apf; } });
+      if (n < 6 || hg < 6 || ag < 6) return null;
+      var v = { lh: hf / hg, la: af / ag, games: hg };
+      try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), v: v })); } catch (e) {}
+      return v;
+    }).catch(function () { return null; });
+  }
+
+  var NEUTRAL = { ST: 4.5, SA: 4.5, KF: 5, KA: 5, CD: 2 };
+  var filled = {};
+  function openMatch(e, quiet, silent) {
+    if (!silent) go("analyze");
+    ctx = null;
+    var lg = leagueCode(e), when = dayLabel(e.date) + " " + hhmm(e.date);
+    var head = e.h.name + " vs " + e.a.name + " · " + e.league + " · " + when + ". ";
+    setVal("A_name", e.h.name); setVal("B_name", e.a.name);
+    setVal("basis", "all"); setVal("lh", 1.45); setVal("la", 1.1);
+    ["A", "B"].forEach(function (p) {
+      setVal(p + "_H", D[p].H); setVal(p + "_H2", 100 - D[p].H);
+      Object.keys(NEUTRAL).forEach(function (k) { setVal(p + "_" + k, NEUTRAL[k]); });
+      setVal(p + "_as", "bal"); setVal(p + "_ds", "bal"); setVal(p + "_atk", 5); setVal(p + "_mid", 5); setVal(p + "_def", 5);
+    });
+    setVal("ref", "");
+    changed();
+    if (quiet) return;
+    if (!lg) {
+      showBanner(head + "Takwimu za ligi hii hazijajazwa kiotomatiki. Weka magoli ya timu na wastani wa ligi kwa mkono (sehemu 1 na 2).", true);
+      return;
+    }
+    showBanner(head + "Napakia takwimu...", false);
+    Promise.all([
+      teamStats(lg, e.h.id), teamStats(lg, e.a.id),
+      leagueAvg(lg, function (d, n) { showBanner(head + "Napakia takwimu za ligi (" + d + "/" + n + ")...", false); })
+    ]).then(function (r) {
+      if (filled[e.id]) return;
+      var tA = r[0], tB = r[1], lgv = r[2];
+      if (!tA || !tB) {
+        showBanner(head + "Takwimu za timu hazikupatikana. Weka magoli kwa mkono.", true);
+        return;
+      }
+      var lh = lgv ? lgv.lh : 1.5, la = lgv ? lgv.la : 1.2, mu = (lh + la) / 2;
+      setVal("lh", r2(lh)); setVal("la", r2(la));
+      function pick(gp, f, a, ogp, of, oa) {
+        return gp > 0 ? { S: r2(f / gp), C: r2(a / gp) } : { S: r2(of / ogp), C: r2(oa / ogp) };
+      }
+      var all = { A: { S: r2(tA.pf / tA.gp), C: r2(tA.pa / tA.gp) }, B: { S: r2(tB.pf / tB.gp), C: r2(tB.pa / tB.gp) } };
+      var ven = { A: tA.hgp > 0 ? { S: r2(tA.hpf / tA.hgp), C: r2(tA.hpa / tA.hgp) } : all.A,
+                  B: tB.agp > 0 ? { S: r2(tB.apf / tB.agp), C: r2(tB.apa / tB.agp) } : all.B };
+      ctx = { all: all, venue: ven };
+      applyBasis();
+      changed();
+      var small = Math.min(tA.gp, tB.gp) < 6;
+      showBanner(head + "Takwimu za msimu: " + e.h.name + " mechi " + n0(tA.gp) + ", " + e.a.name + " mechi " + n0(tB.gp) +
+        (lgv ? "" : ". Wastani wa ligi haukupatikana, nimeweka makadirio (1.5 na 1.2)") +
+        ". Mashuti, kona na kadi ni makadirio, badilisha ukiwa na namba halisi." +
+        (small ? " Mechi ni chache, kwa hiyo makadirio yanaweza kuwa makubwa kupita kiasi." : ""), small || !lgv);
+    });
+  }
+
+  /* ---------- ukurasa wa mechi: takwimu na line-up ---------- */
+  var dCur = null, dTimer = null;
+  var STAT_LABELS = [
+    ["possessionPct", "Umiliki wa mpira %"], ["totalShots", "Mashuti"], ["shotsOnTarget", "Mashuti yaliyolenga lango"],
+    ["blockedShots", "Mashuti yaliyozuiwa"], ["wonCorners", "Kona"], ["foulsCommitted", "Faulo"], ["offsides", "Offside"],
+    ["yellowCards", "Kadi za njano"], ["redCards", "Kadi nyekundu"], ["saves", "Okoa za kipa"],
+    ["accuratePasses", "Pasi sahihi"], ["totalPasses", "Pasi zote"], ["passPct", "Usahihi wa pasi %"], ["totalTackles", "Tackle"]
+  ];
+  function dnum(v) {
+    var x = parseFloat(String(v).replace("%", ""));
+    return isFinite(x) ? Math.round(x) : null;
+  }
+  function openDetail(e) {
+    dCur = e; go("detail"); dCur = e;
+    $("dLeague").textContent = e.league + " · " + dayLabel(e.date) + " " + hhmm(e.date);
+    $("dH").textContent = e.h.name; $("dA").textContent = e.a.name;
+    paintDetailHead(e);
+    $("dp-stats").innerHTML = '<p class="note">Napakia takwimu...</p>';
+    $("dp-lineup").innerHTML = '<p class="note">Napakia line-up...</p>';
+    $("dp-form").innerHTML = '<p class="note">Napakia mechi za nyuma...</p>';
+    paintFollow(e);
+    dTab("form");
+    delete filled[e.id];
+    openMatch(e, false, true);
+    loadDetail(e);
+    loadForm(e);
+  }
+  function paintDetailHead(e) {
+    var live = e.state === "in", fin = e.state === "post";
+    $("dScore").textContent = (live || fin) ? e.h.score + " - " + e.a.score : "vs";
+    var st = $("dStatus");
+    st.className = "dstat" + (live ? " live" : "");
+    st.textContent = live ? (e.detail || "LIVE") : fin ? (e.detail || "Imeisha") : "Haijaanza";
+  }
+  function dTab(t) {
+    ["form", "stats", "lineup"].forEach(function (n) {
+      $("dt-" + n).setAttribute("aria-selected", n === t ? "true" : "false");
+      $("dp-" + n).hidden = n !== t;
+    });
+  }
+  function paintFollow(e) { $("dFollow").textContent = FOLLOW[e.id] ? "🔔 " + T("Unafuata", "Following") : "🔕 " + T("Fuata mechi", "Follow match"); }
+  $("dFollow").addEventListener("click", function () {
+    if (!dCur) return;
+    toggleFollow(dCur.id); paintFollow(dCur);
+    if (FOLLOW[dCur.id] && !NOTIF) toast(T("Washa kengele 🔔 juu kupata arifa za magoli.", "Turn on the bell 🔔 at the top for goal alerts."));
+  });
+  $("dt-form").addEventListener("click", function () { dTab("form"); });
+  $("dt-stats").addEventListener("click", function () { dTab("stats"); });
+  $("dt-lineup").addEventListener("click", function () { dTab("lineup"); });
+  $("dAnalyze").addEventListener("click", function () { if (!dCur) return; if (filled[dCur.id]) go("analyze"); else openMatch(dCur); });
+  function loadDetail(e) {
+    var lg = leagueCode(e), urls = [];
+    if (lg) urls.push(API + lg + "/summary?event=" + encodeURIComponent(e.id));
+    urls.push(API + "all/summary?event=" + encodeURIComponent(e.id));
+    function next(k) {
+      if (k >= urls.length) return Promise.resolve(null);
+      return getJSON(urls[k]).catch(function () { return next(k + 1); });
+    }
+    next(0).then(function (j) {
+      if (dCur !== e) return;
+      if (!j) { $("dp-stats").innerHTML = $("dp-lineup").innerHTML = '<p class="note">Maelezo hayakupatikana sasa. Jaribu tena baadaye.</p>'; return; }
+      renderStats(j, e); renderLineup(j, e);
+      clearTimeout(dTimer);
+      if (e.state === "in") dTimer = setTimeout(function () { if (dCur === e) refreshDetail(e); }, 20000);
+    });
+  }
+  function refreshDetail(e) {
+    pollLive().then(function () { if (dCur === e) loadDetail(e); }, function () { if (dCur === e) loadDetail(e); });
+  }
+  function renderStats(j, e) {
+    var teams = (j.boxscore && j.boxscore.teams) || [], tm = {};
+    teams.forEach(function (t) {
+      var side = t.homeAway || (t.team && String(t.team.id) === e.h.id ? "home" : "away"), m = {};
+      (t.statistics || []).forEach(function (x) { m[x.name] = x.displayValue !== undefined ? x.displayValue : x.value; });
+      tm[side] = m;
+    });
+    var h = "", has = false;
+    STAT_LABELS.forEach(function (p) {
+      var a = tm.home && tm.home[p[0]], b = tm.away && tm.away[p[0]];
+      if (a === undefined && b === undefined) return;
+      var x = dnum(a), y = dnum(b);
+      if (x === null && y === null) return;
+      has = true;
+      h += '<div class="srow"><b>' + (x === null ? "–" : x) + "</b><span>" + p[1] + "</span><b>" + (y === null ? "–" : y) + "</b></div>";
+    });
+    if (!has || e.state === "pre") {
+      var l5 = "";
+      h = '<p class="note" style="margin:0">' + (e.state === "pre" ? "Mechi bado haijaanza, kwa hiyo hakuna takwimu za mechi yenyewe." : "Takwimu za mechi hii hazijatolewa bado.") + "</p>" + (has ? h : "");
+    }
+    $("dp-stats").innerHTML = h;
+  }
+  var luSide = "home", luData = null;
+  function coachName(r) {
+    var c = r.coach || r.coaches || r.manager;
+    if (Array.isArray(c)) c = c[0];
+    if (!c) return "";
+    if (typeof c === "string") return c;
+    return c.displayName || c.fullName || [c.firstName, c.lastName].filter(Boolean).join(" ") || c.name || "";
+  }
+  function posOf(p) { return String((p.position && (p.position.abbreviation || p.position.name)) || "").toUpperCase(); }
+  function layout(r) {
+    var all = r.roster || [];
+    var st = all.filter(function (p) { return p.starter; }).sort(function (p, q) { return (+p.formationPlace || 99) - (+q.formationPlace || 99); });
+    var fm = String(r.formation || "").split("-").map(Number).filter(function (n) { return n > 0; });
+    var sum = fm.reduce(function (a, b) { return a + b; }, 0);
+    var gi = -1;
+    st.forEach(function (p, i) { if (gi < 0 && /^G/.test(posOf(p))) gi = i; });
+    var gk = gi >= 0 ? st.splice(gi, 1)[0] : (st.length === 11 ? st.shift() : null);
+    var rows = [];
+    if (st.length === 10 && sum === 10) {
+      var k = 0;
+      fm.forEach(function (n) { rows.push(st.slice(k, k + n)); k += n; });
+    } else if (st.length) {
+      var d = [], m = [], f = [];
+      st.forEach(function (p) { var c = posOf(p).charAt(0); (c === "D" ? d : c === "F" || c === "S" || c === "W" ? f : m).push(p); });
+      [d, m, f].forEach(function (a) { if (a.length) rows.push(a); });
+    }
+    return { gk: gk, rows: rows, subs: all.filter(function (p) { return !p.starter; }), st: st };
+  }
+  function pitchSvg() {
+    return '<svg viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.6">' +
+      '<rect x="3" y="3" width="94" height="144"/><line x1="3" y1="75" x2="97" y2="75"/><circle cx="50" cy="75" r="12"/>' +
+      '<rect x="22" y="3" width="56" height="24"/><rect x="22" y="123" width="56" height="24"/>' +
+      '<rect x="36" y="3" width="28" height="9"/><rect x="36" y="138" width="28" height="9"/>' +
+      '<circle cx="50" cy="19" r="0.6"/><circle cx="50" cy="131" r="0.6"/></g></svg>';
+  }
+  function surname(p) {
+    var a = p.athlete || {}, n = String(a.shortName || a.displayName || "?").trim().split(/\s+/);
+    return n[n.length - 1];
+  }
+  function ppHtml(p, x, y) {
+    var a = p.athlete || {};
+    return '<div class="pp" style="left:' + x.toFixed(1) + "%;top:" + y.toFixed(1) + '%"><i>' + esc(p.jersey || a.jersey || "") + (p.subbedOut ? "<u>↓</u>" : "") + "</i><span>" + esc(surname(p)) + "</span></div>";
+  }
+  function drawLineup() {
+    if (!luData) return;
+    var j = luData.j, e = luData.e, ro = (j.rosters || []).filter(function (r) { return (r.roster || []).length; });
+    if (!ro.length) {
+      $("dp-lineup").innerHTML = '<p class="note" style="margin:0">' + T("Line-up bado hazijatolewa. Kwa kawaida huonekana kama saa 1 kabla ya mechi kuanza.", "Line-ups are not out yet. They usually appear about 1 hour before kick-off.") + "</p>";
+      return;
+    }
+    var cur = ro.filter(function (r) { return (r.homeAway || "home") === luSide; })[0] || ro[0];
+    var h = '<div class="lside">' + ro.map(function (r) {
+      var sd = r.homeAway || "home", nm = r.team && (r.team.shortDisplayName || r.team.displayName) || (sd === "home" ? e.h.name : e.a.name);
+      return '<button type="button" class="chip" data-side="' + sd + '" aria-pressed="' + (r === cur) + '">' + esc(nm) + (r.formation ? " · " + esc(r.formation) : "") + "</button>";
+    }).join("") + "</div>";
+    var L2 = layout(cur), pl = "";
+    if (L2.gk) pl += ppHtml(L2.gk, 50, 91);
+    var k = L2.rows.length;
+    L2.rows.forEach(function (row, i) {
+      var y = k === 1 ? 45 : 76 - i * (62 / (k - 1));
+      row.forEach(function (p, q) { pl += ppHtml(p, (q + 1) / (row.length + 1) * 100, y); });
+    });
+    h += '<div class="pitch">' + pitchSvg() + pl + "</div>";
+    var cn = coachName(cur);
+    h += '<p class="coach"><b>' + T("Kocha", "Coach") + ":</b> " + (cn ? esc(cn) : T("Haijatolewa", "Not available")) + "</p>";
+    if (L2.subs.length) {
+      h += '<h3 style="margin:14px 0 6px">' + T("Wachezaji wa akiba", "Substitutes") + '</h3><div class="lu">' + L2.subs.map(plRow).join("") + "</div>";
+    }
+    $("dp-lineup").innerHTML = h;
+  }
+  $("dp-lineup").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-side]");
+    if (!b) return;
+    luSide = b.getAttribute("data-side"); drawLineup();
+  });
+  function renderLineup(j, e) { luData = { j: j, e: e }; drawLineup(); }
+  function plRow(p) {
+    var a = p.athlete || {}, pos = p.position && (p.position.abbreviation || p.position.name) || "";
+    var ev = (p.subbedIn ? " ↑" : "") + (p.subbedOut ? " ↓" : "");
+    return '<div class="pl"><i>' + esc(p.jersey || a.jersey || "") + "</i><em>" + esc(pos) + "</em><span>" + esc(a.displayName || a.shortName || "?") + ev + "</span></div>";
+  }
+
+  /* ---------- muhtasari: mechi za nyuma na wastani (5 na 10) ---------- */
+  var FORM = {}; // timeId -> { rows, at }
+  function sGet(t, n) {
+    var a = (t && t.statistics) || [];
+    for (var i = 0; i < a.length; i++) if (a[i].name === n) {
+      var v = parseFloat(a[i].displayValue !== undefined ? a[i].displayValue : a[i].value);
+      return isFinite(v) ? v : null;
+    }
+    return null;
+  }
+  function pastGames(id) {
+    return getJSON(API + "all/teams/" + id + "/schedule?fixture=false").then(function (j) {
+      var out = [];
+      (j.events || []).forEach(function (e) {
+        var c = (e.competitions && e.competitions[0]) || {}, st = (c.status || e.status || {}).type || {};
+        if (st.state !== "post" && !st.completed) return;
+        var me = null, op = null;
+        (c.competitors || []).forEach(function (x) { if (x.team && String(x.team.id) === String(id)) me = x; else op = x; });
+        if (!me || !op || !op.team) return;
+        var lg = e.league || {}, slug = String(lg.slug || ""), comp = lg.name || lg.abbreviation || c.altGameNote || prettySlug(e.season && (e.season.slug || e.season.displayName)) || "";
+        out.push({
+          id: String(e.id), date: new Date(e.date), home: me.homeAway === "home", slug: slug, comp: comp,
+          fr: /friendl|club\.friendly|emirates/i.test(slug + " " + comp),
+          gf: toInt(me.score), ga: toInt(op.score), opp: op.team.shortDisplayName || op.team.displayName || "?"
+        });
+      });
+      out.sort(function (a, b) { return b.date - a.date; });
+      var real = out.filter(function (g) { return !g.fr; });
+      return (real.length >= 5 ? real : out).slice(0, 10);
+    });
+  }
+  function matchExtra(g, id) {
+    var urls = [];
+    if (g.slug) urls.push(API + g.slug + "/summary?event=" + encodeURIComponent(g.id));
+    urls.push(API + "all/summary?event=" + encodeURIComponent(g.id));
+    function parse(j) {
+      var T = (j.boxscore && j.boxscore.teams) || [], me = null, op = null;
+      T.forEach(function (t) { if (t.team && String(t.team.id) === String(id)) me = t; else op = t; });
+      var x = { sot: sGet(me, "shotsOnTarget"), sotA: sGet(op, "shotsOnTarget"), cor: sGet(me, "wonCorners"), corA: sGet(op, "wonCorners"),
+        pos: sGet(me, "possessionPct"), yel: sGet(me, "yellowCards"), red: sGet(me, "redCards"), h1: null };
+      var cs = (j.header && j.header.competitions && j.header.competitions[0] && j.header.competitions[0].competitors) || [];
+      cs.forEach(function (c) {
+        var cid = String(c.id || (c.team && c.team.id) || "");
+        if (cid === String(id) && c.linescores && c.linescores.length >= 2) x.h1 = toInt(c.linescores[0]);
+      });
+      return x;
+    }
+    function next(k) {
+      if (k >= urls.length) return Promise.resolve({});
+      return getJSON(urls[k]).then(parse, function () { return next(k + 1); });
+    }
+    return next(0).catch(function () { return {}; });
+  }
+  function loadTeamForm(id, onStep) {
+    var ck = "bb-form2-" + id;
+    try {
+      var c = JSON.parse(localStorage.getItem(ck) || "null");
+      if (c && Date.now() - c.t < 3 * 3600 * 1000) { c.v.forEach(function (g) { g.date = new Date(g.date); }); return Promise.resolve(c.v); }
+    } catch (e) {}
+    return pastGames(id).then(function (gs) {
+      return pool(gs, 5, function (g) { return matchExtra(g, id); }, onStep).then(function (ex) {
+        gs.forEach(function (g, i) { g.x = ex[i] || {}; });
+        if (gs.length) { try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), v: gs })); } catch (e) {} }
+        return gs;
+      });
+    });
+  }
+  function mean(a) {
+    var v = a.filter(function (x) { return x !== null && x !== undefined && isFinite(x); });
+    return v.length ? v.reduce(function (p, q) { return p + q; }, 0) / v.length : null;
+  }
+  function agg(gs, n) {
+    var g = gs.slice(0, n), N = g.length;
+    if (!N) return null;
+    var w = 0, d = 0, l = 0, bt = 0, ov = 0, cs = 0, sf = 0, h1 = 0, hf = 0;
+    g.forEach(function (m) {
+      if (m.gf > m.ga) w++; else if (m.gf === m.ga) d++; else l++;
+      if (m.gf > 0 && m.ga > 0) bt++;
+      if (m.gf + m.ga > 2) ov++;
+      if (m.ga === 0) cs++;
+      if (m.x && m.x.h1 !== null && m.x.h1 !== undefined) { h1 += m.x.h1; hf += m.gf; }
+    });
+    return {
+      n: N, w: w, d: d, l: l,
+      S: g.reduce(function (p, m) { return p + m.gf; }, 0) / N, C: g.reduce(function (p, m) { return p + m.ga; }, 0) / N,
+      H: hf > 0 ? clamp(h1 / hf * 100, 20, 80) : null,
+      ST: mean(g.map(function (m) { return m.x && m.x.sot; })), SA: mean(g.map(function (m) { return m.x && m.x.sotA; })),
+      KF: mean(g.map(function (m) { return m.x && m.x.cor; })), KA: mean(g.map(function (m) { return m.x && m.x.corA; })),
+      CD: mean(g.map(function (m) { return m.x && m.x.yel !== null && m.x.yel !== undefined ? m.x.yel + (m.x.red || 0) : null; })),
+      pos: mean(g.map(function (m) { return m.x && m.x.pos; })),
+      bt: bt / N * 100, ov: ov / N * 100, cs: cs / N * 100
+    };
+  }
+  function f1(x) { return x === null || x === undefined ? "–" : (Math.round(x * 10) / 10).toFixed(1); }
+  function f0(x) { return x === null || x === undefined ? "–" : String(Math.round(x)); }
+  var FROWS = [
+    ["Magoli inayofunga", "S", f1], ["Magoli inayofungwa", "C", f1], ["Magoli ya kipindi cha 1 (%)", "H", f0],
+    ["Mashuti yaliyolenga: inapiga", "ST", f1], ["Mashuti yaliyolenga: inaruhusu", "SA", f1],
+    ["Kona inazopiga", "KF", f1], ["Kona inazoruhusu", "KA", f1], ["Kadi inazopata", "CD", f1],
+    ["Umiliki wa mpira (%)", "pos", f0], ["Timu zote mbili zifunga (%)", "bt", f0],
+    ["Zaidi ya magoli 2.5 (%)", "ov", f0], ["Haikufungwa (%)", "cs", f0]
+  ];
+  var dForm = null;
+  function formCard(t, gs) {
+    var a5 = agg(gs, 5), a10 = agg(gs, 10);
+    var h = '<div class="fm"><h3>' + crest(t.logo, t.name) + " " + esc(t.name) + "</h3>";
+    if (!gs.length) return h + '<p class="note" style="margin:0">Mechi za nyuma hazikupatikana.</p></div>';
+    h += '<div class="chips" style="margin-bottom:6px">' + gs.slice(0, 5).map(function (m) {
+      var k = m.gf > m.ga ? "W" : m.gf === m.ga ? "D" : "L";
+      return '<span class="wdl ' + k + '">' + k + "</span>";
+    }).join("") + "</div>";
+    h += '<div class="frow fh"><span></span><b>Last ' + a5.n + "</b><b>Last " + a10.n + "</b></div>";
+    h += '<div class="frow"><span>Ushindi / Sare / Kufungwa</span><b>' + a5.w + "-" + a5.d + "-" + a5.l + "</b><b>" + a10.w + "-" + a10.d + "-" + a10.l + "</b></div>";
+    FROWS.forEach(function (r) {
+      h += '<div class="frow"><span>' + r[0] + "</span><b>" + r[2](a5[r[1]]) + "</b><b>" + r[2](a10[r[1]]) + "</b></div>";
+    });
+    if (gs.some(function (m) { return m.fr; })) h += '<p class="note" style="margin:6px 0 0">* ' + T("Mechi za kirafiki zimejumuishwa kwa sababu mechi za mashindano ni chache.", "Friendlies are included because there are few competitive matches.") + "</p>";
+    h += '<details class="fl"><summary>Mechi za nyuma</summary>' + gs.map(function (m) {
+      return '<div class="frow"><span>' + pad(m.date.getDate()) + "/" + pad(m.date.getMonth() + 1) + " " + (m.home ? "N" : "U") + " " + esc(m.opp) + (m.comp ? ' <small class="cmp">' + esc(m.comp) + (m.fr ? " *" : "") + "</small>" : "") + "</span><b>" + m.gf + " - " + m.ga + "</b><b></b></div>";
+    }).join("") + "</details></div>";
+    return h;
+  }
+  function loadForm(e) {
+    var done = 0, total = 2;
+    var tA = e.h, tB = e.a;
+    function step() { if (dCur === e) $("dp-form").innerHTML = '<p class="note">Napakia mechi za nyuma...</p>'; }
+    Promise.all([loadTeamForm(tA.id, step).catch(function () { return []; }), loadTeamForm(tB.id, step).catch(function () { return []; })]).then(function (r) {
+      if (dCur !== e) return;
+      dForm = { e: e, A: r[0], B: r[1] };
+      $("dp-form").innerHTML = '<p class="note" style="margin:0 0 8px">Wastani wa mechi 5 na 10 za mwisho (zote za timu hiyo). Ni namba zile unazojaza kwenye Changanua.</p>' +
+        formCard(tA, r[0]) + formCard(tB, r[1]) +
+        '<div class="fbtns"><button type="button" class="btn" id="useF5">Tumia wastani wa mechi 5</button><button type="button" class="btn" id="useF10">Tumia wastani wa mechi 10</button></div>';
+      var a10 = agg(r[0], 10), b10 = agg(r[1], 10);
+      if (a10 && b10 && a10.n >= 3 && b10.n >= 3) {
+        applyForm(10, true);
+        $("dp-form").insertAdjacentHTML("afterbegin", '<p class="okline">✓ ' + T("Taarifa zimejazwa kwenye Changanua moja kwa moja (wastani wa mechi ", "Data was filled into Analyze automatically (average of ") + Math.min(a10.n, b10.n) + T(").", " matches).") + "</p>");
+      }
+      $("useF5").addEventListener("click", function () { applyForm(5); });
+      $("useF10").addEventListener("click", function () { applyForm(10); });
+    });
+  }
+  function applyForm(n, silent) {
+    if (!dForm) return;
+    var e = dForm.e, a = agg(dForm.A, n), b = agg(dForm.B, n);
+    filled[e.id] = true;
+    openMatch(e, true, silent);
+    ctx = null;
+    if (a && b) {
+      var ha = agg(dForm.A.slice(0, n).filter(function (m) { return m.home; }), 99), ab = agg(dForm.B.slice(0, n).filter(function (m) { return !m.home; }), 99);
+      var ra = { S: r2(a.S), C: r2(a.C) }, rb = { S: r2(b.S), C: r2(b.C) };
+      ctx = { all: { A: ra, B: rb }, venue: { A: ha && ha.n >= 2 ? { S: r2(ha.S), C: r2(ha.C) } : ra, B: ab && ab.n >= 2 ? { S: r2(ab.S), C: r2(ab.C) } : rb } };
+    }
+    function put(p, g) {
+      if (!g) return;
+      setVal(p + "_S", r2(g.S)); setVal(p + "_C", r2(g.C));
+      if (g.H !== null) { setVal(p + "_H", Math.round(g.H)); setVal(p + "_H2", 100 - Math.round(g.H)); }
+      ["ST", "SA", "KF", "KA", "CD"].forEach(function (k) { if (g[k] !== null) setVal(p + "_" + k, r2(g[k])); });
+    }
+    put("A", a); put("B", b);
+    setVal("basis", "all");
+    var lg = leagueCode(e);
+    var fin = function (lgv) {
+      if (lgv) { setVal("lh", r2(lgv.lh)); setVal("la", r2(lgv.la)); }
+      changed();
+      showBanner(e.h.name + " vs " + e.a.name + ". Nimejaza wastani wa mechi " + (a ? a.n : 0) + " na " + (b ? b.n : 0) + " za mwisho." +
+        (lgv ? "" : " Wastani wa ligi haukupatikana, angalia sehemu 1.") + " Unaweza kubadilisha namba yoyote.", !lgv);
+    };
+    fin(null);
+    if (lg) leagueAvg(lg).then(function (v) { if (v && (silent || view === "analyze")) fin(v); });
+  }
+
+
+  /* ---------- mipangilio: rangi, lugha, arifa, akaunti ---------- */
+  var THEMES = [["black", "Nyeusi", "Black", "#000000"], ["pink", "Pinki", "Pink", "#ec1c7c"], ["peach", "Pichi (krimu)", "Peach (cream)", "#f7dccb"], ["night", "Usiku", "Night", "#1c202b"], ["green", "Kijani", "Green", "#3ddc84"]];
+  var THEME_META = { black: "#000000", pink: "#c2185b", peach: "#b4aec6", night: "#0d0f14", green: "#0e1511" };
+  function curTheme() { return document.documentElement.getAttribute("data-theme") || "black"; }
+  function setTheme(t) {
+    if (!THEME_META[t]) t = "black";
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("bb-theme", t); } catch (e) {}
+    $("metaTheme").setAttribute("content", THEME_META[t]);
+    renderThemes();
+  }
+  function renderThemes() {
+    $("themeList").innerHTML = THEMES.map(function (t) {
+      return '<button type="button" class="sw" data-th="' + t[0] + '" aria-pressed="' + (curTheme() === t[0]) + '"><i style="background:' + t[3] + '"></i><b>' + T(t[1], t[2]) + "</b><span>" + (curTheme() === t[0] ? "✓" : "") + "</span></button>";
+    }).join("");
+  }
+  $("themeList").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-th]");
+    if (b) setTheme(b.getAttribute("data-th"));
+  });
+  function paintNotifSettings() {
+    $("notifTxt").textContent = NOTIF ? T("Arifa zimewashwa 🔔", "Alerts are on 🔔") : T("Arifa zimezimwa 🔕", "Alerts are off 🔕");
+    $("setNotif").textContent = NOTIF ? T("Zima", "Turn off") : T("Washa", "Turn on");
+  }
+  $("setNotif").addEventListener("click", function () {
+    $("bellBtn").click();
+    setTimeout(paintNotifSettings, 700);
+  });
+  /* ---------- config, usajili na msimamizi ---------- */
+  var DEF_ADMIN = "867870b688b09d10b66e39ef857143a4e649747851ffb585854f12ac4b817463";
+  var CFG_DEF = { announce: "", maintenance: false, maintMsg: "", signup: true, tabs: { leagues: true, analyze: true }, blocked: [], adminHash: "" };
+  var CFG = JSON.parse(JSON.stringify(CFG_DEF)), CFG_SRC = "default", ADMIN = false, T0 = Date.now(), ADM = null, adFails = 0, adLock = 0;
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v === null || v === undefined ? d : v; } catch (e) { return d; } }
+  function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function normKey(x) { return String(x || "").trim().toLowerCase().replace(/[\s-]/g, ""); }
+  function mergeCfg(src) {
+    var c = clone(CFG_DEF);
+    if (!src || typeof src !== "object") return c;
+    if (typeof src.announce === "string") c.announce = src.announce.slice(0, 400);
+    c.maintenance = src.maintenance === true;
+    if (typeof src.maintMsg === "string") c.maintMsg = src.maintMsg.slice(0, 300);
+    c.signup = src.signup !== false;
+    if (src.tabs && typeof src.tabs === "object") { c.tabs.leagues = src.tabs.leagues !== false; c.tabs.analyze = src.tabs.analyze !== false; }
+    if (Array.isArray(src.blocked)) c.blocked = src.blocked.map(normKey).filter(Boolean).slice(0, 500);
+    if (typeof src.adminHash === "string" && /^x?[0-9a-f]{6,64}$/.test(src.adminHash)) c.adminHash = src.adminHash;
+    return c;
+  }
+  function hash(str) {
+    str = "bb|" + str;
+    if (window.crypto && crypto.subtle && window.TextEncoder) {
+      return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function (b) {
+        return Array.prototype.map.call(new Uint8Array(b), function (x) { return ("0" + x.toString(16)).slice(-2); }).join("");
+      });
+    }
+    var h = 5381; for (var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+    return Promise.resolve("x" + h.toString(16));
+  }
+  function loadCfg() {
+    var local = jget("bb-cfg-local", null), cached = jget("bb-cfg-remote", null);
+    return new Promise(function (res) {
+      var done = false; function fin() { if (!done) { done = true; res(); } }
+      setTimeout(fin, 2200);
+      try {
+        fetch("config.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { if (j && typeof j === "object") { jset("bb-cfg-remote", j); cached = j; } fin(); }).catch(fin);
+      } catch (e) { fin(); }
+    }).then(function () {
+      var src = local || cached;
+      CFG = mergeCfg(src); CFG_SRC = local ? "local" : cached ? "remote" : "default";
+    });
+  }
+  function applyCfg() {
+    var a = $("announce");
+    if (CFG.announce) { a.hidden = false; a.textContent = "📢 " + CFG.announce; } else a.hidden = true;
+    $("nav-leagues").hidden = !CFG.tabs.leagues; $("nav-analyze").hidden = !CFG.tabs.analyze;
+    if (!CFG.tabs.leagues && (view === "leagues" || view === "league")) go("matches", { nav: true });
+    if (!CFG.tabs.analyze && view === "analyze") go("matches", { nav: true });
+  }
+  function isBlocked(contact) { return CFG.blocked.indexOf(normKey(contact)) >= 0; }
+
+  /* ---------- akaunti (kwenye simu hii) ---------- */
+  function usersMap() { return jget("bb-users", {}); }
+  function sessionUser() {
+    var k = ""; try { k = localStorage.getItem("bb-session") || ""; } catch (e) {}
+    var u = usersMap()[k];
+    return u ? { key: k, name: u.name, contact: u.contact, team: u.team || "" } : null;
+  }
+  var USER = sessionUser();
+  function paintGreet() {
+    var g = $("greet");
+    if (USER && USER.name) { g.hidden = false; g.textContent = T("Karibu, ", "Welcome, ") + USER.name + " 👋"; } else g.hidden = true;
+  }
+  function renderAcct(edit, err) {
+    var h = "";
+    if (!USER) { h = '<p class="note" style="margin:0">' + T("Hujaingia.", "You are not signed in.") + "</p>"; }
+    else if (!edit) {
+      h = '<p style="margin:0 0 4px"><b>' + esc(USER.name) + "</b></p>" +
+        '<p class="note" style="margin:0">' + esc(USER.contact) + (USER.team ? " · ⚽ " + esc(USER.team) : "") + "</p>" +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="btn" id="acEdit">' + T("Hariri", "Edit") + '</button><button type="button" class="btn" id="acOut">' + T("Toka", "Sign out") + "</button></div>";
+    } else {
+      h = '<div class="fld2">' +
+        '<label>' + T("Jina lako", "Your name") + '<input id="su_name" type="text" maxlength="40" value="' + esc(USER.name) + '" style="font-family:var(--f-body)"></label>' +
+        '<label>' + T("Timu unayopenda (hiari)", "Favorite team (optional)") + '<input id="su_team" type="text" maxlength="40" value="' + esc(USER.team) + '" style="font-family:var(--f-body)"></label>' +
+        (err ? '<p class="err">' + esc(err) + "</p>" : "") +
+        '<div><button type="button" class="btn" id="acSave">' + T("Hifadhi", "Save") + "</button></div></div>";
+    }
+    $("acctOut").innerHTML = h;
+  }
+  $("acctOut").addEventListener("click", function (e) {
+    var id = e.target.id;
+    if (id === "acEdit") renderAcct(true);
+    else if (id === "acOut") { signOut(); }
+    else if (id === "acSave") {
+      var name = $("su_name").value.trim(), team = $("su_team").value.trim();
+      if (name.length < 2) { renderAcct(true, T("Andika jina lako (herufi 2 au zaidi).", "Enter your name (2 or more letters).")); return; }
+      var us = usersMap(); if (us[USER.key]) { us[USER.key].name = name; us[USER.key].team = team; jset("bb-users", us); }
+      USER = sessionUser(); paintGreet(); renderAcct(false); toast(T("Imehifadhiwa.", "Saved."));
+    }
+  });
+  function signOut() {
+    try { localStorage.removeItem("bb-session"); } catch (e) {}
+    USER = null; paintGreet(); renderAcct(false); showGate("login");
+  }
+
+  /* ---------- skrini ya kuingia ---------- */
+  function hideGate() { $("gate").hidden = true; document.body.style.overflow = ""; }
+  function gateErr(m) { var el = $("g_err"); if (el) { el.textContent = m || ""; el.hidden = !m; } }
+  function showGate(mode, msg) {
+    var g = $("gate"); g.hidden = false; document.body.style.overflow = "hidden"; g.setAttribute("data-mode", mode);
+    var h = '<div class="gbox"><div class="glogo">BB</div><h2>Betting Brain</h2>';
+    function field(id, label, type, ac) { return '<label>' + label + '<input id="' + id + '" type="' + type + '" autocomplete="' + ac + '" style="font-family:var(--f-body)"></label>'; }
+    if (mode === "login" || mode === "signup") {
+      h += '<div class="gtabs" role="tablist"><button type="button" data-gm="login" aria-selected="' + (mode === "login") + '">' + T("Ingia", "Sign in") + '</button><button type="button" data-gm="signup" aria-selected="' + (mode === "signup") + '">' + T("Jisajili", "Sign up") + "</button></div>";
+      if (mode === "login") {
+        h += '<div class="fld2">' + field("g_con", T("Barua pepe au namba ya simu", "Email or phone number"), "text", "username") + field("g_pw", T("Nenosiri", "Password"), "password", "current-password") +
+          '<p class="err" id="g_err" hidden></p><button type="button" class="btn main" id="g_login">' + T("Ingia", "Sign in") + "</button></div>";
+      } else if (!CFG.signup) {
+        h += '<p class="note" style="text-align:center">' + T("Usajili umefungwa kwa sasa na msimamizi.", "Sign-ups are closed by the admin right now.") + "</p>";
+      } else {
+        h += '<div class="fld2">' + field("g_name", T("Jina lako", "Your name"), "text", "name") + field("g_con", T("Barua pepe au namba ya simu", "Email or phone number"), "text", "username") +
+          field("g_pw", T("Nenosiri (herufi 6 au zaidi)", "Password (6+ characters)"), "password", "new-password") + field("g_team", T("Timu unayopenda (hiari)", "Favorite team (optional)"), "text", "off") +
+          '<p class="err" id="g_err" hidden></p><button type="button" class="btn main" id="g_signup">' + T("Fungua akaunti", "Create account") + "</button></div>" +
+          '<p class="note" style="text-align:center">' + T("Akaunti inahifadhiwa kwenye simu hii. Nenosiri likisahaulika haliwezi kurejeshwa.", "The account is stored on this phone. A forgotten password cannot be recovered.") + "</p>";
+      }
+      h += '<button type="button" class="glink" data-gm="admin">' + T("Msimamizi", "Admin") + "</button>";
+    } else if (mode === "admin") {
+      h += '<p class="note" style="text-align:center;margin:0">' + T("Weka PIN ya msimamizi.", "Enter the admin PIN.") + '</p><div class="fld2">' + field("g_pin", "PIN", "password", "off") +
+        '<p class="err" id="g_err" hidden></p><button type="button" class="btn main" id="g_admin">' + T("Fungua paneli", "Open panel") + '</button></div><button type="button" class="glink" data-gm="' + (USER ? "close" : "login") + '">' + T("Rudi", "Back") + "</button>";
+    } else if (mode === "blocked") {
+      h += '<p style="text-align:center">' + T("Akaunti hii imezuiwa na msimamizi.", "This account has been blocked by the admin.") + '</p><button type="button" class="btn main" id="g_out">' + T("Toka", "Sign out") + '</button><button type="button" class="glink" data-gm="admin">' + T("Msimamizi", "Admin") + "</button>";
+    } else if (mode === "maint") {
+      h += '<p style="text-align:center">🛠 ' + esc(CFG.maintMsg || T("App inafanyiwa matengenezo. Rudi baadaye.", "The app is under maintenance. Please come back later.")) + '</p><button type="button" class="glink" data-gm="admin">' + T("Msimamizi", "Admin") + "</button>";
+    }
+    g.innerHTML = h + "</div>";
+    var f1 = $("g_con") || $("g_pin") || $("g_name"); if (f1 && !msg) { try { f1.focus(); } catch (e) {} }
+    if (msg) gateErr(msg);
+  }
+  function enter(key) {
+    try { localStorage.setItem("bb-session", key); } catch (e) {}
+    USER = sessionUser(); paintGreet(); renderAcct(false);
+    if (USER && isBlocked(USER.contact) && !ADMIN) { showGate("blocked"); return; }
+    hideGate(); toast(T("Karibu, ", "Welcome, ") + USER.name + "!");
+  }
+  $("gate").addEventListener("click", function (e) {
+    var gm = e.target.closest("[data-gm]");
+    if (gm) { var m = gm.getAttribute("data-gm"); if (m === "close") hideGate(); else showGate(m); return; }
+    var id = e.target.id;
+    if (id === "g_out") { signOut(); return; }
+    if (id === "g_login") {
+      var con = normKey($("g_con").value), pw = $("g_pw").value, u = usersMap()[con];
+      if (!con || !pw) return gateErr(T("Jaza barua pepe/simu na nenosiri.", "Enter email/phone and password."));
+      if (!u) return gateErr(T("Akaunti haipo kwenye simu hii. Jisajili kwanza.", "No account on this phone. Sign up first."));
+      hash(con + "|" + pw).then(function (hh) { if (hh !== u.hash) gateErr(T("Nenosiri si sahihi.", "Wrong password.")); else enter(con); });
+    } else if (id === "g_signup") {
+      var name = $("g_name").value.trim(), raw = $("g_con").value.trim(), pw2 = $("g_pw").value, team = $("g_team").value.trim(), key = normKey(raw);
+      var okMail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw), okTel = /^\+?\d{9,15}$/.test(key);
+      if (name.length < 2) return gateErr(T("Andika jina lako (herufi 2 au zaidi).", "Enter your name (2 or more letters)."));
+      if (!okMail && !okTel) return gateErr(T("Weka barua pepe sahihi au namba ya simu.", "Enter a valid email or phone number."));
+      if (pw2.length < 6) return gateErr(T("Nenosiri liwe na herufi 6 au zaidi.", "Password must be 6+ characters."));
+      var us = usersMap(); if (us[key]) return gateErr(T("Akaunti hii tayari ipo. Ingia.", "This account already exists. Sign in."));
+      if (isBlocked(key)) return gateErr(T("Akaunti hii imezuiwa.", "This account is blocked."));
+      hash(key + "|" + pw2).then(function (hh) {
+        us[key] = { name: name, contact: raw, team: team, hash: hh, at: Date.now() }; jset("bb-users", us); enter(key);
+      });
+    } else if (id === "g_admin") {
+      if (Date.now() < adLock) return gateErr(T("Subiri kidogo kisha ujaribu tena.", "Wait a moment and try again."));
+      hash($("g_pin").value).then(function (hh) {
+        if (hh === (CFG.adminHash || DEF_ADMIN)) {
+          ADMIN = true; adFails = 0; try { sessionStorage.setItem("bb-admin", "1"); } catch (e) {}
+          hideGate(); paintAdm(); go("admin");
+        } else { adFails++; if (adFails >= 3) { adLock = Date.now() + 30000; adFails = 0; } gateErr(T("PIN si sahihi.", "Wrong PIN.")); }
+      });
+    }
+  });
+  $("gate").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var b = $("g_login") || $("g_signup") || $("g_admin"); if (b) b.click();
+  });
+
+  /* ---------- paneli ya msimamizi ---------- */
+  function paintAdm() {
+    $("admTxt").textContent = ADMIN ? T("Umeingia kama msimamizi", "Signed in as admin") : T("Kwa msimamizi tu", "For the admin only");
+    $("admBtn").textContent = ADMIN ? T("Fungua paneli", "Open panel") : T("Ingia", "Sign in");
+  }
+  $("admBtn").addEventListener("click", function () { if (ADMIN) go("admin"); else showGate("admin"); });
+  $("adBack").addEventListener("click", back);
+  $("adOut").addEventListener("click", function () { ADMIN = false; try { sessionStorage.removeItem("bb-admin"); } catch (e) {} paintAdm(); go("matches", { nav: true }); decide(); });
+  function renderAdmin() {
+    if (!ADMIN) { go("matches", { nav: true }); return; }
+    if (!ADM) ADM = clone(CFG);
+    var users = usersMap(), keys = Object.keys(users);
+    var src = CFG_SRC === "local" ? T("mipangilio ya majaribio ya simu hii", "this phone's test settings") : CFG_SRC === "remote" ? T("config.json ya mtandaoni", "online config.json") : T("kawaida (config.json haipo)", "defaults (no config.json)");
+    var h = '<section class="card"><h2>' + T("Tangazo", "Announcement") + '</h2><textarea id="ad_ann" maxlength="400" placeholder="' + T("Tangazo la kuonyeshwa juu ya orodha ya mechi", "Message shown above the match list") + '">' + esc(ADM.announce) + "</textarea></section>" +
+      '<section class="card"><h2>' + T("Udhibiti wa app", "App controls") + "</h2>" +
+      '<div class="adrow"><label class="ck"><input type="checkbox" id="ad_signup"' + (ADM.signup ? " checked" : "") + ">" + T("Ruhusu usajili mpya", "Allow new sign-ups") + "</label></div>" +
+      '<div class="adrow"><label class="ck"><input type="checkbox" id="ad_leagues"' + (ADM.tabs.leagues ? " checked" : "") + ">" + T("Onyesha kichupo cha Ligi", "Show Leagues tab") + "</label></div>" +
+      '<div class="adrow"><label class="ck"><input type="checkbox" id="ad_analyze"' + (ADM.tabs.analyze ? " checked" : "") + ">" + T("Onyesha kichupo cha Changanua", "Show Analyze tab") + "</label></div>" +
+      '<div class="adrow"><label class="ck"><input type="checkbox" id="ad_maint"' + (ADM.maintenance ? " checked" : "") + ">" + T("Weka app kwenye matengenezo (watumiaji wafungiwe)", "Maintenance mode (lock users out)") + "</label></div>" +
+      '<label style="margin-top:8px">' + T("Ujumbe wa matengenezo", "Maintenance message") + '<input id="ad_mmsg" type="text" maxlength="300" value="' + esc(ADM.maintMsg) + '" style="font-family:var(--f-body)"></label></section>' +
+      '<section class="card"><h2>' + T("Waliozuiwa", "Blocked") + "</h2>" +
+      (ADM.blocked.length ? ADM.blocked.map(function (b) { return '<div class="adrow"><span>' + esc(b) + '</span><button type="button" class="btn" data-unb="' + esc(b) + '">' + T("Fungua", "Unblock") + "</button></div>"; }).join("") : '<p class="note" style="margin:0">' + T("Hakuna.", "None.") + "</p>") +
+      '<div style="display:flex;gap:8px;margin-top:10px"><input id="ad_blk" type="text" placeholder="' + T("Barua pepe au simu", "Email or phone") + '" style="font-family:var(--f-body);flex:1"><button type="button" class="btn" id="ad_blkAdd">' + T("Zuia", "Block") + "</button></div></section>" +
+      '<section class="card"><h2>' + T("Watumiaji wa simu hii", "Users on this phone") + " (" + keys.length + ")</h2>" +
+      (keys.length ? keys.map(function (k) { var u = users[k], bl = ADM.blocked.indexOf(k) >= 0; return '<div class="adrow"><span><b>' + esc(u.name) + "</b><br><small>" + esc(u.contact) + (bl ? " · ⛔" : "") + '</small></span><button type="button" class="btn" data-tg="' + esc(k) + '">' + (bl ? T("Fungua", "Unblock") : T("Zuia", "Block")) + "</button></div>"; }).join("") : '<p class="note" style="margin:0">' + T("Hakuna.", "None.") + "</p>") +
+      '<p class="note">' + T("Orodha hii ni ya simu hii tu. Hakuna seva inayokusanya watumiaji wa simu zote.", "This list covers this phone only. No server collects users from all phones.") + "</p></section>" +
+      '<section class="card"><h2>PIN</h2><div style="display:flex;gap:8px"><input id="ad_pin" type="password" placeholder="' + T("PIN mpya (tarakimu 6+)", "New PIN (6+ chars)") + '" style="font-family:var(--f-body);flex:1"><button type="button" class="btn" id="ad_pinSet">' + T("Badilisha", "Change") + "</button></div>" +
+      '<p class="note">' + T("PIN ya kwanza ni admin2026. Ibadilishe kisha upakue config.json.", "The first PIN is admin2026. Change it, then download config.json.") + "</p></section>" +
+      '<section class="card"><h2>' + T("Hifadhi na chapisha", "Save and publish") + '</h2><p class="note" style="margin:0 0 10px">' + T("Chanzo kinachotumika sasa: ", "Source in use now: ") + esc(src) + "</p>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn main" id="ad_save" style="background:var(--accent);color:var(--on-accent)">' + T("Hifadhi na jaribu hapa", "Save and test here") + '</button><button type="button" class="btn" id="ad_dl">' + T("Pakua config.json", "Download config.json") + '</button><button type="button" class="btn" id="ad_reset">' + T("Rudisha ya mtandaoni", "Reset to online") + "</button></div>" +
+      '<p class="note">' + T("Ili mabadiliko yafike kwa watumiaji wote: pakua config.json, kiweke kwenye folda ya app pamoja na index.html, kisha upload folda hiyo kwenye Netlify.", "To reach all users: download config.json, put it in the app folder next to index.html, then upload that folder to Netlify.") + "</p></section>";
+    $("adBody").innerHTML = h;
+  }
+  function admRead() {
+    if (!$("ad_ann")) return;
+    ADM.announce = $("ad_ann").value.trim(); ADM.signup = $("ad_signup").checked; ADM.tabs.leagues = $("ad_leagues").checked; ADM.tabs.analyze = $("ad_analyze").checked;
+    ADM.maintenance = $("ad_maint").checked; ADM.maintMsg = $("ad_mmsg").value.trim();
+  }
+  $("adBody").addEventListener("click", function (e) {
+    var t = e.target, id = t.id; if (!ADM) ADM = clone(CFG);
+    if (t.getAttribute("data-unb")) { admRead(); ADM.blocked = ADM.blocked.filter(function (x) { return x !== t.getAttribute("data-unb"); }); renderAdmin(); }
+    else if (t.getAttribute("data-tg")) { admRead(); var k = t.getAttribute("data-tg"), i = ADM.blocked.indexOf(k); if (i >= 0) ADM.blocked.splice(i, 1); else ADM.blocked.push(k); renderAdmin(); }
+    else if (id === "ad_blkAdd") { admRead(); var v = normKey($("ad_blk").value); if (v && ADM.blocked.indexOf(v) < 0) ADM.blocked.push(v); renderAdmin(); }
+    else if (id === "ad_pinSet") {
+      var p = $("ad_pin").value; if (p.length < 6) { toast(T("PIN iwe na tarakimu 6 au zaidi.", "PIN must be 6+ characters.")); return; }
+      admRead(); hash(p).then(function (hh) { ADM.adminHash = hh; toast(T("PIN mpya imewekwa. Bonyeza Hifadhi, kisha pakua config.json.", "New PIN set. Press Save, then download config.json.")); $("ad_pin").value = ""; });
+    }
+    else if (id === "ad_save") { admRead(); CFG = mergeCfg(ADM); CFG_SRC = "local"; jset("bb-cfg-local", CFG); applyCfg(); ADM = clone(CFG); renderAdmin(); toast(T("Imehifadhiwa kwenye simu hii.", "Saved on this phone.")); }
+    else if (id === "ad_dl") {
+      admRead(); var out = mergeCfg(ADM); if (!out.adminHash) delete out.adminHash;
+      try { var blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "config.json"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); } catch (er) { toast(T("Imeshindwa kupakua.", "Download failed.")); }
+    }
+    else if (id === "ad_reset") { try { localStorage.removeItem("bb-cfg-local"); } catch (er) {} CFG = mergeCfg(jget("bb-cfg-remote", null)); CFG_SRC = jget("bb-cfg-remote", null) ? "remote" : "default"; ADM = clone(CFG); applyCfg(); renderAdmin(); toast(T("Imerudishwa.", "Reset.")); }
+  });
+  function decide() {
+    if (ADMIN) { hideGate(); return; }
+    if (CFG.maintenance) { showGate("maint"); return; }
+    if (!USER) { showGate("login"); return; }
+    if (isBlocked(USER.contact)) { showGate("blocked"); return; }
+    hideGate();
+  }
+  function hideSplash() { var sp = $("splash"); if (!sp) return; sp.classList.add("out"); setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 700); }
+  function bootAuth() {
+    try { ADMIN = sessionStorage.getItem("bb-admin") === "1"; } catch (e) {}
+    loadCfg().then(function () {
+      applyCfg(); paintAdm();
+      setTimeout(function () { decide(); hideSplash(); }, Math.max(0, 2400 - (Date.now() - T0)));
+    });
+  }
+  function paintSound() {
+    $("soundTxt").textContent = SOUND ? T("Sauti imewashwa 🔊", "Sound is on 🔊") : T("Sauti imezimwa 🔇", "Sound is off 🔇");
+    $("soundBtn").textContent = SOUND ? T("Zima", "Turn off") : T("Washa", "Turn on");
+  }
+  $("soundBtn").addEventListener("click", function () {
+    SOUND = !SOUND; try { localStorage.setItem("bb-sound", SOUND ? "1" : "0"); } catch (e) {}
+    paintSound(); if (SOUND) chime("alert");
+  });
+  $("tryChime").addEventListener("click", function () { var k = SOUND; SOUND = true; chime("alert"); SOUND = k; });
+  $("tryGoal").addEventListener("click", function () { var k = SOUND; SOUND = true; chime("goal"); SOUND = k; });
+  function renderSettings() { renderThemes(); paintNotifSettings(); paintSound(); renderAcct(false); paintAdm(); }
+  paintGreet();
+
+  /* ---------- sehemu na vichupo ---------- */
+  var view = "matches", lastTop = "matches", depth = 0, pending = null, fromPop = false;
+  var TOP = { matches: 1, leagues: 1, analyze: 1 };
+  var VIEWS = ["matches", "leagues", "league", "detail", "analyze", "settings", "admin"];
+  function go(v, o) {
+    o = o || {};
+    var sub = !TOP[v] || (v === "analyze" && !o.nav);
+    if (!fromPop && sub && v !== view) { depth++; try { history.pushState({ v: v, d: depth }, ""); } catch (e) {} }
+    view = v;
+    if (TOP[v] && (o.nav || v !== "analyze")) lastTop = v;
+    VIEWS.forEach(function (n) { $("v-" + n).hidden = n !== v; });
+    var hl = v === "analyze" ? "analyze" : lastTop;
+    ["matches", "leagues", "analyze"].forEach(function (n) { $("nav-" + n).setAttribute("aria-selected", n === hl ? "true" : "false"); });
+    try { window.scrollTo(0, 0); } catch (e) {}
+    if (v !== "detail") dCur = null;
+    if (v === "leagues") renderLeagues();
+    if (v === "league") renderLeague();
+    if (v === "settings") renderSettings();
+    if (v === "admin") renderAdmin();
+    if (v === "matches" && L.at && Date.now() - L.at.getTime() > 60000) loadList(true);
+  }
+  window.addEventListener("popstate", function (e) {
+    depth = (e.state && e.state.d) || 0;
+    var v = pending || (e.state && e.state.v) || lastTop;
+    pending = null; fromPop = true; go(v, { nav: true }); fromPop = false;
+  });
+  function back() {
+    if (depth > 0) { try { history.back(); return; } catch (e) {} }
+    go(lastTop, { nav: true });
+  }
+  function navTo(v) {
+    if (depth > 0) { pending = v; try { history.go(-depth); return; } catch (e) { pending = null; } }
+    if (v !== view) go(v, { nav: true });
+  }
+  $("aBack").addEventListener("click", back);
+  $("dBack").addEventListener("click", back);
+  $("lBack").addEventListener("click", back);
+  $("sBack").addEventListener("click", back);
+  $("setBtn").addEventListener("click", function () { go("settings"); });
+  ["matches", "leagues", "analyze"].forEach(function (n) { $("nav-" + n).addEventListener("click", function () { navTo(n); }); });
+
+  /* ---------- orodha ya ligi ---------- */
+  function lk(e) { return e.lid || e.league; }
+  function renderLeagues() {
+    var g = {}, ord = [];
+    L.events.forEach(function (e) {
+      var k = lk(e);
+      if (!g[k]) { g[k] = { e: e, n: 0 }; ord.push(k); }
+      g[k].n++;
+    });
+    ord.sort(function (a, b) {
+      var ca = CATORD[catOf(g[a].e)], cb = CATORD[catOf(g[b].e)];
+      return ca !== cb ? ca - cb : g[a].e.league.localeCompare(g[b].e.league);
+    });
+    var h = "", cur = "";
+    ord.forEach(function (k) {
+      var e = g[k].e, c = catOf(e);
+      if (c !== cur) {
+        cur = c;
+        h += '<div class="lcat">' + CATS.filter(function (x) { return x[0] === c; })[0][1] + "</div>";
+      }
+      h += '<button type="button" class="lrow" data-k="' + esc(k) + '">' + lgLogo(e) + '<span class="ln">' + esc(e.league) + '</span><span class="cn">' + g[k].n + "</span></button>";
+    });
+    $("lgList").innerHTML = h || '<p class="note">Hakuna ligi kwa sasa. Onyesha upya orodha ya mechi.</p>';
+  }
+  $("lgList").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-k]");
+    if (!b) return;
+    L.league = b.getAttribute("data-k");
+    go("league");
+  });
+  function renderLeague() {
+    var list = L.events.filter(function (e) { return lk(e) === L.league; });
+    if (!list.length) { $("lgHead").innerHTML = ""; $("lgMatches").innerHTML = '<p class="note">Hakuna mechi inayolingana.</p>'; return; }
+    var e0 = list[0];
+    $("lgHead").innerHTML = lgLogo(e0) + '<span class="lgn">' + esc(e0.league) + "</span>";
+    var h = "", cur = "";
+    list.sort(function (a, b) { return a.date - b.date; }).forEach(function (e) {
+      var key = ymd(e.date);
+      if (key !== cur) { cur = key; h += '<div class="mday">' + dayLabel(e.date) + "</div>"; }
+      h += matchRow(e);
+    });
+    $("lgMatches").innerHTML = h;
+  }
+  $("lgMatches").addEventListener("click", rowClick);
+  var tabs = ["goals", "halves", "extra"];
+  tabs.forEach(function (n) {
+    $("t-" + n).addEventListener("click", function () {
+      tabs.forEach(function (m) {
+        $("t-" + m).setAttribute("aria-selected", m === n ? "true" : "false");
+        $("p-" + m).hidden = m !== n;
+      });
+    });
+  });
+
+  run();
+  loadList(false);
+  bootAuth();
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var LK = "bb-lang", lang = "sw";
+  lang = "en";
+  var btn = document.getElementById("langBtn");
+  btn.textContent = lang === "en" ? "Kiswahili" : "English";
+  
+  btn.addEventListener("click", function () {
+    try { localStorage.setItem(LK, lang === "en" ? "sw" : "en"); } catch (e) {}
+    location.reload();
+  });
+  if (lang !== "en") return;
+  document.documentElement.lang = "en";
+  var P = [
+    ["Uchambuzi wa mechi · Poisson", "Match analysis · Poisson"],
+    ["Mechi za leo na zinazofuata, na uchambuzi wa magoli, vipindi, kona, kadi na mashuti.", "Today's and upcoming matches, plus analysis of goals, halves, corners, cards and shots."],
+    ["Zimejazwa tayari", "Pre-filled"],
+    ["Namba zote zimekusanywa na Claude. Gusa mechi ili kuichambua.", "All numbers were gathered by Claude. Tap a match to analyze it."],
+    ["Ulaya (UCL/UEL)", "Europe (UCL/UEL)"], ["Timu za taifa", "National teams"], ["Nyingine", "Other"], ["Zote", "All"], ["Tayari", "Ready"],
+    ["Tafuta timu au ligi", "Search team or league"], ["Aina ya mechi", "Match category"],
+    ["Napakia mechi...", "Loading matches..."], ["Onyesha upya", "Refresh"],
+    ["Mechi hazikupatikana. Angalia mtandao kisha bonyeza Onyesha upya.", "Matches could not be loaded. Check your connection, then tap Refresh."],
+    ["Hakuna mechi inayolingana.", "No matches found."], ["Imesasishwa", "Updated"],
+    ["Leo, ", "Today, "], ["Kesho, ", "Tomorrow, "],
+    ["Jumapili", "Sunday"], ["Jumatatu", "Monday"], ["Jumanne", "Tuesday"], ["Jumatano", "Wednesday"], ["Alhamisi", "Thursday"], ["Ijumaa", "Friday"], ["Jumamosi", "Saturday"],
+    ["← Rudi", "← Back"], ["Changanua mechi hii", "Analyze this match"], ["Maelezo ya mechi", "Match details"],
+    ["Napakia takwimu za ligi (", "Loading league stats ("], ["Napakia takwimu...", "Loading stats..."], ["Napakia line-up...", "Loading line-ups..."],
+    ["Maelezo hayakupatikana sasa. Jaribu tena baadaye.", "Details are not available right now. Try again later."],
+    ["Mechi bado haijaanza, kwa hiyo hakuna takwimu za mechi yenyewe.", "The match has not started, so there are no match stats yet."],
+    ["Takwimu za mechi hii hazijatolewa bado.", "Stats for this match are not available yet."],
+    ["Line-up bado hazijatolewa. Kwa kawaida huonekana kama saa 1 kabla ya mechi kuanza.", "Line-ups are not out yet. They usually appear about 1 hour before kick-off."],
+    ["Wachezaji wa akiba", "Substitutes"], ["Imeisha", "Finished"], ["Haijaanza", "Not started"],
+    ["Umiliki wa mpira %", "Possession %"], ["Mashuti yaliyozuiwa", "Blocked shots"], ["Mashuti yaliyolenga lango", "Shots on target"], ["Mashuti", "Shots"],
+    ["Faulo", "Fouls"], ["Kadi za njano", "Yellow cards"], ["Kadi nyekundu", "Red cards"], ["Okoa za kipa", "Saves"],
+    ["Pasi sahihi", "Accurate passes"], ["Pasi zote", "Total passes"], ["Usahihi wa pasi %", "Pass accuracy %"],
+    ["1. Wastani wa ligi nzima", "1. League averages"], ["Magoli ya nyumbani kwa mechi", "Home goals per match"], ["Magoli ya ugenini kwa mechi", "Away goals per match"],
+    ["Hesabu: jumla ya magoli yote ya nyumbani ÷ idadi ya mechi zote za msimu.", "Calculation: total home goals ÷ number of matches this season."],
+    ["2. Timu mbili na magoli", "2. The two teams and goals"], ["Takwimu za timu zinatoka wapi?", "Where do the team stats come from?"],
+    ["Mechi zote (nyumbani na ugenini)", "All matches (home and away)"], ["Nyumbani kwa timu A, ugenini kwa timu B", "Team A at home, team B away"],
+    ["Inacheza nyumbani", "Playing at home"], ["Inacheza ugenini", "Playing away"],
+    ["Magoli inayofunga (kwa mechi)", "Goals scored (per match)"], ["Magoli inayofungwa (kwa mechi)", "Goals conceded (per match)"],
+    ["Magoli ya kipindi cha 1 (%)", "1st-half goals (%)"], ["Magoli ya kipindi cha 2 (%)", "2nd-half goals (%)"],
+    ["Namba zote za mwanzo ni mfano wa kujifunzia. Weka namba halisi za mechi 5 hadi 10 za mwisho. Ukibadilisha asilimia ya kipindi cha 1, ya kipindi cha 2 inabadilika yenyewe.", "All starting numbers are examples. Enter real numbers from the last 5 to 10 matches. If you change the 1st-half percentage, the 2nd-half one changes by itself."],
+    ["3. Kona, mashuti na kadi", "3. Corners, shots and cards"],
+    ["Mashuti yaliyolenga: inapiga", "Shots on target: for"], ["Mashuti yaliyolenga: inaruhusu", "Shots on target: against"],
+    ["Kona inazopiga", "Corners for"], ["Kona inazoruhusu", "Corners against"], ["Kadi inazopata", "Cards received"],
+    ["Wastani kwa mechi. Hesabu kadi zote (njano na nyekundu) kama kadi moja kila moja.", "Average per match. Count every card (yellow and red) as one card each."],
+    ["4. Mtindo wa kucheza na ubora", "4. Play style and quality"], ["Mtindo wa kushambulia", "Attacking style"], ["Mtindo wa kujilinda", "Defending style"],
+    ["Mchanganyiko", "Balanced"], ["Possession (kumiliki mpira)", "Possession"], ["Long ball (mipira mirefu)", "Long ball"],
+    ["Counter (kushtukiza)", "Counter"], ["Quick counter (kushtukiza haraka)", "Quick counter"], ["Out wide (pembeni na krosi)", "Out wide (wings and crosses)"],
+    ["Kushambulia sana", "Very attacking"], ["Kujilinda sana (low block)", "Deep defense (low block)"], ["Presha ya juu (high press)", "High press"],
+    ["Ushambulizi", "Attack"], ["Kiungo", "Midfield"], ["Ulinzi", "Defense"],
+    ["Viwango 1 hadi 10, na 5 ni wastani. Mitindo na viwango ni marekebisho ya makadirio, siyo sheria. Ukiacha 5 na \"Mchanganyiko\" kote, hakuna marekebisho yanayofanyika.", "Ratings are 1 to 10, with 5 as average. Styles and ratings only adjust the estimate; they are not rules. If you leave everything at 5 and \"Balanced\", no adjustment is made."],
+    ["5. Mistari ya kubashiri", "5. Betting lines"], ["Mstari wa kona (jumla)", "Corners line (total)"], ["Mstari wa mashuti yaliyolenga", "Shots on target line"],
+    ["Mstari wa kadi (jumla)", "Cards line (total)"], ["Wastani wa kadi za mwamuzi (hiari)", "Referee average cards (optional)"], ["mf. 4.2", "e.g. 4.2"],
+    ["Tumia mistari yenye .5 (mfano 9.5) ili kusiwe na matokeo ya \"sawa\". Mwamuzi akijulikana, wastani wake unachanganywa na wa timu.", "Use lines ending in .5 (for example 9.5) so there is no \"push\". If the referee is known, his average is blended with the teams'."],
+    ["Rudisha namba za mfano", "Reset example numbers"], ["Magoli yanayotarajiwa", "Expected goals"],
+    ["Namba zimezungushwa kuwa nzima.", "Numbers are rounded to whole numbers."],
+    [" Marekebisho ya mtindo na ubora yamejumuishwa: ", " Style and rating adjustments included: "],
+    [" Hakuna marekebisho ya mtindo au ubora.", " No style or rating adjustments."],
+    ["Vipindi 1 na 2", "Halves 1 and 2"], ["Kona, kadi, mashuti", "Corners, cards, shots"],
+    ["Nani anashinda (dakika 90)?", "Who wins (90 minutes)?"], ["Uwezekano wa ushindi, sare na kushindwa", "Win, draw and loss probability"],
+    ["Masoko ya magoli", "Goal markets"], ["Timu zote mbili zifunge", "Both teams to score"], ["Angalau timu moja haifungi", "At least one team does not score"],
+    ["Matokeo 5 yenye uwezekano mkubwa", "Top 5 most likely scores"], ["Jedwali la matokeo kamili", "Full scoreline table"],
+    ["Mistari ni magoli ya", "Rows are the goals of"], [", safu ni magoli ya", ", columns are the goals of"], [". Rangi nzito ni uwezekano mkubwa.", ". Darker colors mean higher probability."],
+    ["Magoli kwa kipindi", "Goals by half"], ["Magoli ya kipindi cha 1", "1st-half goals"], ["Magoli ya kipindi cha 2", "2nd-half goals"],
+    ["Magoli yanayotarajiwa kipindi cha 1", "Expected goals 1st half"], ["Magoli yanayotarajiwa kipindi cha 2", "Expected goals 2nd half"],
+    ["Matokeo ya nusu (kipindi cha 1)", "Half-time result (1st half)"], ["Uwezekano wa matokeo ya nusu", "Half-time result probability"],
+    ["Kipindi cha 2 peke yake", "2nd half on its own"], ["Uwezekano wa matokeo ya kipindi cha 2", "2nd-half result probability"],
+    ["Kipindi cha 2 kina magoli mengi zaidi", "2nd half has more goals"], ["Vipindi vyote vina magoli sawa", "Both halves have equal goals"], ["Kipindi cha 1 kina magoli mengi zaidi", "1st half has more goals"],
+    ["Matokeo ya nusu yenye uwezekano mkubwa", "Most likely half-time scores"], ["Nusu na mwisho", "Half-time / full-time"],
+    ["Mstari ni nani anaongoza nusu, safu ni nani anashinda mwisho.", "Rows show who leads at half-time, columns who wins at full time."],
+    ["Nusu \\ Mwisho", "HT \\ FT"], ["Nyumbani", "Home"], ["Sare", "Draw"], ["Ugenini", "Away"],
+    ["Jumla inayotarajiwa ya kona", "Expected total corners"], ["Jumla inayotarajiwa ya mashuti", "Expected total shots"], ["Jumla inayotarajiwa ya kadi", "Expected total cards"],
+    ["Jumla inayotarajiwa", "Expected total"], ["(hakuna mshindi)", "(push)"],
+    ["Inavyokokotolewa", "How it is calculated"],
+    ["Magoli, takwimu za mechi zote: ushambulizi wa timu × udhaifu wa ulinzi wa pinzani × faida ya nyumbani, kulingana na wastani wa ligi. Ukichagua \"Nyumbani/ugenini\", faida ya nyumbani inatoka kwenye takwimu zenyewe.", "Goals, all-matches stats: team attack × opponent's defensive weakness × home advantage, relative to the league average. If you choose \"Home/away\", the home advantage comes from the stats themselves."],
+    ["ni uwezekano wa kupata matukio k kamili. Inatumika kwa magoli, kona, mashuti na kadi.", "is the probability of exactly k events. It is used for goals, corners, shots and cards."],
+    ["Vipindi: magoli yanayotarajiwa yanagawanywa kwa asilimia ya kipindi cha 1 (wastani wa timu mbili). Kila kipindi kinahesabiwa chenyewe, kisha vinajumlishwa kupata nusu na mwisho.", "Halves: expected goals are split by the 1st-half percentage (average of the two teams). Each half is calculated on its own, then combined to get half-time and full-time."],
+    ["Kona na mashuti: (kile timu inapiga + kile pinzani inaruhusu) ÷ 2.", "Corners and shots: (what the team produces + what the opponent allows) ÷ 2."],
+    ["Kadi: wastani wa kadi za kila timu, ukichanganywa 50/50 na wa mwamuzi kama umeuweka.", "Cards: each team's average cards, blended 50/50 with the referee's if you entered one."],
+    ["Marekebisho ya mtindo na ubora", "Style and quality adjustments"],
+    ["Mtindo wa kushambulia unabadilisha timu yenyewe. Mtindo wa kujilinda unabadilisha namba za pinzani. Yote ni makadirio ya kawaida, siyo sheria ya kisayansi.", "The attacking style changes the team itself. The defending style changes the opponent's numbers. All of it is a rough estimate, not a scientific rule."],
+    ["Kushambulia: ", "Attacking: "], ["Kujilinda: ", "Defending: "], ["pinzani: magoli", "opponent: goals"], ["kadi zako", "your cards"],
+    ["magoli, kona, mashuti +4%", "goals, corners, shots +4%"], ["magoli yako −4%", "your goals −4%"], ["+2% kwako, −2% kwa pinzani", "+2% for you, −2% for the opponent"],
+    ["magoli ", "goals "], ["kona ", "corners "], ["mashuti ", "shots "],
+    ["Kila pointi 1 ya ushambulizi juu ya 5", "Each attack point above 5"], ["Kila pointi 1 ya ulinzi wa pinzani juu ya 5", "Each opponent defense point above 5"], ["Kila pointi 1 ya kiungo mbele ya pinzani", "Each midfield point ahead of the opponent"],
+    ["Hii ni makadirio kutokana na takwimu, siyo uhakika. Majeruhi, kadi nyekundu, mwamuzi na hali ya mchezo hubadilisha mambo mengi. Takwimu za mechi chache zinapotosha kwa urahisi. Usiweke pesa usiyoweza kupoteza.", "This is an estimate based on statistics, not a certainty. Injuries, red cards, the referee and match conditions change a lot. Stats from few matches mislead easily. Do not bet money you cannot afford to lose."],
+    ["Mechi 5 kwa kila timu. Mashuti na kona zinazoruhusiwa ni makadirio. Lyon amefungwa magoli 2 tu, kwa hiyo makadirio ni makali kupita kiasi.", "5 matches per team. Shots and corners allowed are estimates. Lyon have conceded only 2 goals, so the estimate is too harsh."],
+    ["Mechi 4 kwa kila timu. Mashuti na kona zinazoruhusiwa ni makadirio. Bremen hana wachezaji 8.", "4 matches per team. Shots and corners allowed are estimates. Bremen are missing 8 players."],
+    ["Takwimu za ligi hii hazijajazwa kiotomatiki. Weka magoli ya timu na wastani wa ligi kwa mkono (sehemu 1 na 2).", "Stats for this league are not filled in automatically. Enter the team goals and league averages by hand (sections 1 and 2)."],
+    ["Takwimu za timu hazikupatikana. Weka magoli kwa mkono.", "Team stats could not be loaded. Enter the goals by hand."],
+    ["Takwimu za msimu: ", "Season stats: "], [" mechi ", " matches "],
+    [". Wastani wa ligi haukupatikana, nimeweka makadirio (1.5 na 1.2)", ". League average not found, using estimates (1.5 and 1.2)"],
+    [". Mashuti, kona na kadi ni makadirio, badilisha ukiwa na namba halisi.", ". Shots, corners and cards are estimates; change them if you have real numbers."],
+    [" Mechi ni chache, kwa hiyo makadirio yanaweza kuwa makubwa kupita kiasi.", " Few matches played, so the estimate may be too extreme."],
+    ["Jina la timu ", "Team name "], ["Timu ", "Team "], ["Inacheza", "Playing"], ["Matokeo", "Results"], ["Sehemu", "Sections"],
+    ["Takwimu", "Stats"], ["Mechi", "Matches"], ["Changanua", "Analyze"], ["Sawa na ", "Exactly "], ["Zaidi ya magoli ", "Over goals "], ["Chini ya magoli ", "Under goals "],
+    ["Zaidi ya ", "Over "], ["Chini ya ", "Under "], ["Zaidi", "More"], ["Inatarajiwa: ", "Expected: "], [" ashinde", " wins"], ["Nani zaidi: ", "Most: "],
+    ["Kona", "Corners"], ["Kadi", "Cards"], ["Rangi ya app", "App color"], ["Sauti", "Sound"], ["Jaribu sauti", "Test sound"], ["Zima", "Turn off"], ["Arifa", "Alert"], ["Goli", "Goal"], ["Lugha", "Language"], ["Arifa za magoli", "Goal alerts"], ["Akaunti", "Account"],
+    ["Washa", "Turn on"], ["Mipangilio", "Settings"], ["Kiswahili / English", "Swahili / English"], ["Hakuna mechi inayoendelea sasa.", "No matches in play right now."],
+    ["Arifa zinafanya kazi app ikiwa wazi au nyuma ya simu. Bonyeza kengele kwenye mechi unayotaka kufuatilia.", "Alerts work while the app is open or in the background. Tap the bell on a match you want to follow."], ["Muhtasari", "Summary"], ["Napakia mechi za nyuma...", "Loading recent matches..."],
+    ["Mechi za nyuma hazikupatikana.", "Recent matches not found."], ["Mechi za nyuma", "Recent matches"],
+    ["Wastani wa mechi 5 na 10 za mwisho (zote za timu hiyo). Ni namba zile unazojaza kwenye Changanua.", "Averages of the last 5 and 10 matches (all matches of that team). These are the numbers you fill in under Analyze."],
+    ["Tumia wastani wa mechi 5", "Use last 5 average"], ["Tumia wastani wa mechi 10", "Use last 10 average"],
+    ["Ushindi / Sare / Kufungwa", "Won / Drawn / Lost"], ["Timu zote mbili zifunga (%)", "Both teams score (%)"], ["Zaidi ya magoli 2.5 (%)", "Over 2.5 goals (%)"],
+    ["Haikufungwa (%)", "Clean sheet (%)"], ["Umiliki wa mpira (%)", "Possession (%)"], ["Magoli inayofunga", "Goals scored"], ["Magoli inayofungwa", "Goals conceded"],
+    ["Nimejaza wastani wa mechi ", "Filled in the average of the last "], [" za mwisho.", " matches."], [" Unaweza kubadilisha namba yoyote.", " You can change any number."],
+    [" Wastani wa ligi haukupatikana, angalia sehemu 1.", " League average not found, check section 1."], ["Ligi", "Leagues"], ["Gusa ligi kuona mechi zake.", "Tap a league to see its matches."], ["Hakuna ligi kwa sasa. Onyesha upya orodha ya mechi.", "No leagues right now. Refresh the match list."], ["Jpili", "Sun"], ["Jtatu", "Mon"], ["Jnne", "Tue"], ["Jtano", "Wed"], ["Alh", "Thu"], ["Ijm", "Fri"], ["Jmosi", "Sat"], ["Kesho", "Tomorrow"], ["Jana", "Yesterday"], ["Leo", "Today"], ["Siku", "Days"], [" · mechi ", " · "], [" zinaendelea", " live"], ["Magoli", "Goals"]
+  ];
+  var MON = { Mac: "Mar", Mei: "May", Ago: "Aug", Okt: "Oct", Des: "Dec" };
+  // order: longest phrase first
+  P.sort(function (a, b) { return b[0].length - a[0].length; });
+  function tr(t) {
+    var out = t;
+    P.forEach(function (p) { if (out.indexOf(p[0]) >= 0) out = out.split(p[0]).join(p[1]); });
+    out = out.replace(/\b(\d{1,2}) (Mac|Mei|Ago|Okt|Des)\b/g, function (m, d, mo) { return d + " " + MON[mo]; });
+    out = out.replace(/Over goals (\d+(\.\d)?)/, "Over $1 goals").replace(/Under goals (\d+(\.\d)?)/, "Under $1 goals");
+    out = out.replace(/Exactly (\S+) \(push\)/, "Exactly $1 (push)");
+    return out;
+  }
+  var skip = { SCRIPT: 1, STYLE: 1, INPUT: 1, TEXTAREA: 1 };
+  var busy = false;
+  function doNode(n) {
+    if (n.nodeType === 3) {
+      var v = n.nodeValue, m = /^(\s*)([\s\S]*?)(\s*)$/.exec(v);
+      if (!m[2] || (n.parentElement && skip[n.parentElement.tagName])) return;
+      var r = tr(m[2]);
+      if (r !== m[2]) n.nodeValue = m[1] + r + m[3];
+      return;
+    }
+    if (n.nodeType !== 1 || skip[n.tagName] && n.tagName !== "INPUT") return;
+    ["placeholder", "aria-label"].forEach(function (a) {
+      if (n.hasAttribute(a)) { var o = n.getAttribute(a), r = tr(o); if (r !== o) n.setAttribute(a, r); }
+    });
+    if (n.tagName === "INPUT" && n.type === "text" && n.classList.contains("name")) {
+      var q = tr(n.value); if (q !== n.value) n.value = q;
+    }
+    for (var c = n.firstChild; c; c = c.nextSibling) doNode(c);
+  }
+  function all() { busy = true; doNode(document.body); busy = false; }
+  all();
+  new MutationObserver(function (ms) {
+    if (busy) return;
+    busy = true;
+    ms.forEach(function (m) {
+      if (m.type === "characterData") doNode(m.target);
+      else m.addedNodes.forEach(doNode);
+    });
+    busy = false;
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
+</script>
+</body>
+</html>
