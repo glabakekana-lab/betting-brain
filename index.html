@@ -288,19 +288,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
 .pp span { margin-top: 2px; font-size: 0.68rem; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lside { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .coach { font-size: 0.85rem; margin: 10px 0 0; }
-.ball { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #fff; border: 2px solid #222; box-shadow: 0 0 0 4px rgba(255,255,255,0.35);
-  transition: left 1.6s ease-in-out, top 1.6s ease-in-out; z-index: 3; }
-.ball::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); animation: ping 1.6s ease-out infinite; }
-@keyframes ping { from { transform: scale(0.5); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
-.tag-bubble { position: absolute; z-index: 4; background: #fff; color: var(--pop); font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 10px;
-  max-width: 62%; transform: translate(-50%, -140%); transition: left 1.6s ease-in-out, top 1.6s ease-in-out; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-.trk path.arrow, .trk line.arrow { stroke: #fff; stroke-width: 0.8; stroke-dasharray: 2 2; animation: dash 1s linear infinite; fill: none; }
-@keyframes dash { to { stroke-dashoffset: -8; } }
-.gm { position: absolute; z-index: 2; font-size: 0.65rem; font-weight: 700; color: #fff; background: rgba(0,0,0,0.55); padding: 1px 5px; border-radius: 8px; transform: translate(-50%, -50%); white-space: nowrap; }
-.evl { margin-top: 10px; }
-.ev { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 8px; padding-block: 6px; border-top: 1px solid var(--line); font-size: 0.85rem; }
-.ev b { font-family: var(--f-mono); color: var(--live); }
-@media (prefers-reduced-motion: reduce) { .ball, .tag-bubble { transition: none; } .ball::after, .trk .arrow { animation: none; } }
 .mday { font-family: var(--f-display); font-size: 1rem; margin: 16px 0 8px; }
 .mrow { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left;
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
@@ -409,12 +396,10 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
         <button type="button" class="tab" role="tab" id="dt-form" aria-selected="true">Muhtasari</button>
         <button type="button" class="tab" role="tab" id="dt-stats" aria-selected="false">Takwimu</button>
         <button type="button" class="tab" role="tab" id="dt-lineup" aria-selected="false">Line-up</button>
-        <button type="button" class="tab" role="tab" id="dt-live" aria-selected="false">Moja kwa moja</button>
       </div>
       <div id="dp-form"></div>
       <div id="dp-stats" hidden></div>
       <div id="dp-lineup" hidden></div>
-      <div id="dp-live" hidden></div>
     </section>
   </section>
 
@@ -1002,7 +987,36 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     Object.keys(FOLLOW).forEach(function (k) { if (Date.now() - FOLLOW[k] > 3 * 86400000) delete FOLLOW[k]; });
     NOTIF = localStorage.getItem("bb-notif") === "1" && "Notification" in window && Notification.permission === "granted";
   } catch (e) {}
-  function saveFollow() { try { localStorage.setItem("bb-follow", JSON.stringify(FOLLOW)); } catch (e) {} }
+  function saveFollow() { try { localStorage.setItem("bb-follow", JSON.stringify(FOLLOW)); } catch (e) {} syncSW(); }
+  /* arifa app ikiwa imefungwa: tuma hali kwa Service Worker, omba background sync, shikilia ukurasa hai */
+  var LOCKED = false;
+  function syncSW() {
+    try {
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.ready.then(function (r) {
+        var w = r.active || navigator.serviceWorker.controller;
+        if (w) w.postMessage({ type: "bb-state", follow: FOLLOW, prev: PREV, notif: NOTIF, en: typeof EN !== "undefined" && !!EN });
+      }).catch(function () {});
+      regPeriodic();
+      keepAlive();
+    } catch (e) {}
+  }
+  function regPeriodic() {
+    try {
+      if (!NOTIF || !("serviceWorker" in navigator)) return;
+      navigator.serviceWorker.ready.then(function (r) {
+        if (r.periodicSync && r.periodicSync.register) r.periodicSync.register("bb-goals", { minInterval: 60000 }).catch(function () {});
+        if (r.sync && r.sync.register) r.sync.register("bb-goals").catch(function () {});
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function keepAlive() {
+    try {
+      if (LOCKED || !NOTIF || !navigator.locks || !Object.keys(FOLLOW).length) return;
+      LOCKED = true;
+      navigator.locks.request("bb-keepalive", function () { return new Promise(function () {}); }).catch(function () { LOCKED = false; });
+    } catch (e) { LOCKED = false; }
+  }
   function toggleFollow(id) { if (FOLLOW[id]) delete FOLLOW[id]; else FOLLOW[id] = Date.now(); saveFollow(); }
   function toast(msg) {
     var t = $("toast"); t.textContent = msg; t.hidden = false;
@@ -1051,14 +1065,14 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
   $("bellBtn").addEventListener("click", function () {
     if (NOTIF) {
       NOTIF = false; try { localStorage.setItem("bb-notif", "0"); } catch (e) {}
-      paintBell(); toast(T("Arifa zimezimwa.", "Alerts turned off.")); return;
+      paintBell(); syncSW(); toast(T("Arifa zimezimwa.", "Alerts turned off.")); return;
     }
     if (!("Notification" in window)) { toast(T("Simu hii haiungi arifa.", "This device does not support notifications.")); return; }
     Notification.requestPermission().then(function (p) {
       if (p === "granted") {
         NOTIF = true; try { localStorage.setItem("bb-notif", "1"); } catch (e) {}
-        paintBell();
-        notify("✅ " + T("Arifa zimewashwa", "Alerts are on"), T("Bonyeza 🔕 kwenye mechi unazotaka kufuatilia. Acha app wazi ili kupata arifa.", "Tap 🔕 on the matches you want to follow. Keep the app open to get alerts."), "bb-welcome");
+        paintBell(); syncSW();
+        notify("✅ " + T("Arifa zimewashwa", "Alerts are on"), T("Bonyeza 🔕 kwenye mechi unazotaka kufuatilia. Ukiwa nje ya app arifa zinaweza kuchelewa; acha app wazi kwa arifa za papo hapo.", "Tap 🔕 on the matches you want to follow. With the app closed alerts may be delayed; keep it open for instant alerts."), "bb-welcome");
       } else toast(T("Ruhusa ya arifa imekataliwa. Iwashe kwenye mipangilio ya Chrome.", "Notification permission was denied. Enable it in Chrome settings."));
     });
   });
@@ -1074,7 +1088,12 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
       }
       PREV[e.id] = { hs: e.h.score, as: e.a.score, state: e.state };
     });
+    syncSW();
   }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && L.events.length && followActive()) pollLive();
+  });
+  if (NOTIF) setTimeout(syncSW, 1500);
   function followActive() {
     return Object.keys(FOLLOW).some(function (id) {
       var e = L.byId[id];
@@ -1398,9 +1417,8 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     $("dp-stats").innerHTML = '<p class="note">Napakia takwimu...</p>';
     $("dp-lineup").innerHTML = '<p class="note">Napakia line-up...</p>';
     $("dp-form").innerHTML = '<p class="note">Napakia mechi za nyuma...</p>';
-    $("dp-live").innerHTML = '<p class="note">Napakia...</p>';
     paintFollow(e);
-    dTab(e.state === "in" ? "live" : "form");
+    dTab("form");
     delete filled[e.id];
     openMatch(e, false, true);
     loadDetail(e);
@@ -1414,7 +1432,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     st.textContent = live ? (e.detail || "LIVE") : fin ? (e.detail || "Imeisha") : "Haijaanza";
   }
   function dTab(t) {
-    ["form", "stats", "lineup", "live"].forEach(function (n) {
+    ["form", "stats", "lineup"].forEach(function (n) {
       $("dt-" + n).setAttribute("aria-selected", n === t ? "true" : "false");
       $("dp-" + n).hidden = n !== t;
     });
@@ -1425,7 +1443,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     toggleFollow(dCur.id); paintFollow(dCur);
     if (FOLLOW[dCur.id] && !NOTIF) toast(T("Washa kengele 🔔 juu kupata arifa za magoli.", "Turn on the bell 🔔 at the top for goal alerts."));
   });
-  $("dt-live").addEventListener("click", function () { dTab("live"); });
   $("dt-form").addEventListener("click", function () { dTab("form"); });
   $("dt-stats").addEventListener("click", function () { dTab("stats"); });
   $("dt-lineup").addEventListener("click", function () { dTab("lineup"); });
@@ -1440,8 +1457,8 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     }
     next(0).then(function (j) {
       if (dCur !== e) return;
-      if (!j) { $("dp-stats").innerHTML = $("dp-lineup").innerHTML = $("dp-live").innerHTML = '<p class="note">Maelezo hayakupatikana sasa. Jaribu tena baadaye.</p>'; return; }
-      renderStats(j, e); renderLineup(j, e); renderLive(j, e);
+      if (!j) { $("dp-stats").innerHTML = $("dp-lineup").innerHTML = '<p class="note">Maelezo hayakupatikana sasa. Jaribu tena baadaye.</p>'; return; }
+      renderStats(j, e); renderLineup(j, e);
       clearTimeout(dTimer);
       if (e.state === "in") dTimer = setTimeout(function () { if (dCur === e) refreshDetail(e); }, 20000);
     });
@@ -1551,123 +1568,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; background: var(--field); 
     var a = p.athlete || {}, pos = p.position && (p.position.abbreviation || p.position.name) || "";
     var ev = (p.subbedIn ? " ↑" : "") + (p.subbedOut ? " ↓" : "");
     return '<div class="pl"><i>' + esc(p.jersey || a.jersey || "") + "</i><em>" + esc(pos) + "</em><span>" + esc(a.displayName || a.shortName || "?") + ev + "</span></div>";
-  }
-
-  /* ---------- moja kwa moja: mpira unajongea kwa makadirio ---------- */
-  var TRK = { x: 50, y: 50, px: 50, py: 50, items: [], e: null, tm: null };
-  var KLAB = {
-    goal: ["GOLI", "GOAL"], shot: ["Shuti", "Shot"], corner: ["Kona", "Corner"], foul: ["Faulo", "Foul"], offside: ["Offside", "Offside"],
-    card: ["Kadi", "Card"], pen: ["Penalti", "Penalty"], sub: ["Mabadiliko", "Substitution"], other: ["", ""]
-  };
-  function evKind(t) {
-    t = String(t || "").toLowerCase();
-    if (/penalty/.test(t) && !/saved|miss/.test(t)) return "pen";
-    if (/own goal|goal!|^goal|scores|converts/.test(t)) return "goal";
-    if (/corner/.test(t)) return "corner";
-    if (/attempt|shot|header|saved|blocked|wide|post|bar/.test(t)) return "shot";
-    if (/offside/.test(t)) return "offside";
-    if (/yellow|red card|booked|sent off/.test(t)) return "card";
-    if (/substitution|replaces/.test(t)) return "sub";
-    if (/foul|free kick/.test(t)) return "foul";
-    return "other";
-  }
-  function evSide(it, e) {
-    var tid = (it.team && it.team.id) || (it.play && it.play.team && it.play.team.id) || it.teamId;
-    if (tid !== undefined && tid !== null) { tid = String(tid); if (tid === e.h.id) return "home"; if (tid === e.a.id) return "away"; }
-    var t = String(it.text || it.shortText || "").toLowerCase(), hn = e.h.name.toLowerCase(), an = e.a.name.toLowerCase();
-    var ih = t.indexOf(hn) >= 0, ia = t.indexOf(an) >= 0;
-    return ih && !ia ? "home" : ia && !ih ? "away" : null;
-  }
-  function evMin(it) {
-    var c = (it.clock && (it.clock.displayValue || it.clock.value)) || (it.time && (it.time.displayValue || it.time.value)) || "";
-    var m = parseInt(String(c), 10);
-    return isFinite(m) ? m : 0;
-  }
-  function evItems(j, e) {
-    var src = (j.commentary && j.commentary.length ? j.commentary : j.keyEvents) || [], out = [];
-    src.forEach(function (it, i) {
-      var text = it.text || it.shortText || (it.type && it.type.text) || "";
-      if (!text) return;
-      var kind = evKind((it.type && it.type.text ? it.type.text + " " : "") + text);
-      out.push({ i: i, min: evMin(it), disp: (it.clock && it.clock.displayValue) || (it.time && it.time.displayValue) || "", text: text, kind: kind, side: evSide(it, e) });
-    });
-    out.sort(function (a, b) { return b.min - a.min || b.i - a.i; });
-    return out;
-  }
-  function ballFor(it) {
-    var jit = function (r) { return (Math.random() - 0.5) * r; };
-    var x = 50, y = 42;
-    if (it) {
-      var k = it.kind;
-      if (k === "goal" || k === "pen") { x = 50; y = k === "pen" ? 14 : 6; }
-      else if (k === "shot") { x = 50 + jit(36); y = 15 + jit(6); }
-      else if (k === "corner") { x = Math.random() < 0.5 ? 5 : 95; y = 5; }
-      else if (k === "foul" || k === "offside") { x = 50 + jit(50); y = 33 + jit(8); }
-      else { x = 50 + jit(40); y = 40 + jit(14); }
-      if (it.side === "away") y = 100 - y;
-      else if (!it.side) y = 50 + jit(30);
-    }
-    return { x: Math.max(6, Math.min(94, x)), y: Math.max(5, Math.min(95, y)) };
-  }
-  function trackLabel(it, e) {
-    if (!it) return "";
-    var l = KLAB[it.kind][EN ? 1 : 0], tn = it.side === "home" ? e.h.name : it.side === "away" ? e.a.name : "";
-    var base = l || String(it.text).slice(0, 38);
-    return (it.disp ? it.disp + " " : "") + base + (tn && l ? " – " + tn : "");
-  }
-  function drawTracker() {
-    var e = TRK.e; if (!e || !$("trkBall")) return;
-    var b = $("trkBall"), bub = $("trkBub"), pr = $("trkPrev");
-    b.style.left = TRK.x + "%"; b.style.top = TRK.y + "%";
-    bub.style.left = Math.max(22, Math.min(78, TRK.x)) + "%"; bub.style.top = TRK.y + "%";
-    var it = TRK.items[0];
-    bub.textContent = trackLabel(it, e);
-    var lines = '<line class="arrow" x1="' + TRK.px + '" y1="' + TRK.py * 1.5 + '" x2="' + TRK.x + '" y2="' + TRK.y * 1.5 + '"/>';
-    if (it && (it.kind === "shot" || it.kind === "corner" || it.kind === "goal" || it.kind === "pen") && it.side) {
-      lines += '<line class="arrow" x1="' + TRK.x + '" y1="' + TRK.y * 1.5 + '" x2="50" y2="' + (it.side === "home" ? 3 : 147) + '"/>';
-    }
-    pr.innerHTML = lines;
-  }
-  function moveBall(it) {
-    var p = ballFor(it);
-    TRK.px = TRK.x; TRK.py = TRK.y; TRK.x = p.x; TRK.y = p.y;
-    drawTracker();
-  }
-  function renderLive(j, e) {
-    var live = e.state === "in";
-    TRK.e = e;
-    var items = evItems(j, e), fresh = !$("trkBall") || (items[0] && (!TRK.items[0] || TRK.items[0].text !== items[0].text || TRK.items[0].min !== items[0].min));
-    TRK.items = items;
-    if (!$("trkBall")) {
-      $("dp-live").innerHTML = '<p class="note" style="margin:0 0 6px">' + T("Mpira unaonyeshwa kwa makadirio kulingana na matukio ya hivi karibuni (si ufuatiliaji halisi wa mpira). Mistari inaonyesha shambulizi la mwisho.", "The ball position is an estimate based on the latest match events (not real ball tracking). Lines show the latest attack.") + "</p>" +
-        '<div class="pitch trk" id="trkPitch">' + pitchSvg() + '<svg viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true" id="trkPrev"></svg>' +
-        '<div class="gm" style="left:50%;top:2%;display:none" id="gmTop"></div><div class="gm" style="left:50%;top:98%;display:none" id="gmBot"></div>' +
-        '<div class="ball" id="trkBall" style="left:50%;top:50%"></div><div class="tag-bubble" id="trkBub" style="left:50%;top:50%"></div></div>' +
-        '<div class="evl" id="trkList"></div>';
-    }
-    $("trkBall").style.display = live ? "" : "none"; $("trkBub").style.display = live ? "" : "none"; $("trkPrev").style.display = live ? "" : "none";
-    var goalsH = items.filter(function (i) { return i.kind === "goal" && i.side === "home"; }).map(function (i) { return i.disp || ""; });
-    var goalsA = items.filter(function (i) { return i.kind === "goal" && i.side === "away"; }).map(function (i) { return i.disp || ""; });
-    var gt = $("gmTop"), gb = $("gmBot");
-    gt.style.display = goalsH.length ? "" : "none"; gt.textContent = "⚽ " + goalsH.join(" · ");
-    gb.style.display = goalsA.length ? "" : "none"; gb.textContent = "⚽ " + goalsA.join(" · ");
-    $("trkList").innerHTML = '<h3 style="margin:14px 0 6px">' + T("Matukio muhimu", "Key events") + "</h3>" +
-      (items.length ? items.slice(0, 10).map(function (it) {
-        var ico = it.kind === "goal" ? "⚽ " : it.kind === "card" ? "🟨 " : it.kind === "corner" ? "🚩 " : it.kind === "sub" ? "🔁 " : "";
-        return '<div class="ev"><b>' + esc(it.disp || "") + "</b><span>" + ico + esc(it.text) + "</span></div>";
-      }).join("") : '<p class="note" style="margin:0">' + (e.state === "pre" ? T("Itaonyesha mechi ikianza.", "It will show once the match starts.") : T("Hakuna matukio bado.", "No events yet.")) + "</p>");
-    if (live) {
-      if (fresh) moveBall(items[0]);
-      clearInterval(TRK.tm);
-      TRK.tm = setInterval(function () {
-        if (!dCur || dCur !== TRK.e || $("dp-live").hidden || document.hidden) return;
-        var it = TRK.items[0];
-        var p = ballFor(it && it.kind === "goal" ? null : it && { kind: "other", side: it.side });
-        // drift near the attacking half of the team that last acted
-        TRK.px = TRK.x; TRK.py = TRK.y; TRK.x = Math.max(6, Math.min(94, (TRK.x * 2 + p.x) / 3)); TRK.y = Math.max(5, Math.min(95, (TRK.y * 2 + p.y) / 3));
-        drawTracker();
-      }, 2600);
-    } else clearInterval(TRK.tm);
   }
 
   /* ---------- muhtasari: mechi za nyuma na wastani (5 na 10) ---------- */
